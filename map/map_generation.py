@@ -18,8 +18,12 @@ def generate_map_config(grid_dim: tuple[int, int]= GRID_DIM,
                         ) -> MapConfig:
     
     grid = generate_populated_map(grid_dim, percent_obstacles)
-    leader_path = generate_leader_path(grid, min_leader_path_distance) 
-    obstacle_distance_map = compute_obstacle_distance_map(grid)
+
+    # Extract raw grid numpy array for computation
+    grid_np = grid.raw()
+
+    leader_path = generate_leader_path(grid_np, min_leader_path_distance) 
+    obstacle_distance_map = compute_obstacle_distance_map(grid_np)
     leader_path_distance_map = compute_leader_path_distance_map(leader_path, grid_dim)
     agent_index = {} # Add all grid positions to agent index with value None
 
@@ -53,11 +57,11 @@ def get_valid_leader_starts(grid_shape: tuple[int, int], entrance_width: int) ->
 def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) -> GridWrapper:
     pass
 
-def generate_leader_path(grid: GridWrapper, min_distance: int) -> list[tuple[int, int]]:
+def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int, int]]:
     # uses get_valid_leader_starts to get valid starting positions for the leader
     pass
 
-def compute_obstacle_distance_map(grid: GridWrapper) -> GridWrapper:
+def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
     pass
 
 def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
