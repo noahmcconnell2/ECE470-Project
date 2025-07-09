@@ -53,12 +53,12 @@ def get_valid_leader_starts(grid_shape: tuple[int, int], entrance_width: int) ->
 def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) -> GridWrapper:
     pass
 
-def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int, int]]:
+def generate_leader_path(grid: GridWrapper, min_distance: int) -> list[tuple[int, int]]:
     # uses get_valid_leader_starts to get valid starting positions for the leader
     pass
 
-def compute_obstacle_distance_map(grid: np.ndarray) -> np.ndarray:
+def compute_obstacle_distance_map(grid: GridWrapper) -> GridWrapper:
     pass
 
-def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> np.ndarray:
+def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
     pass
