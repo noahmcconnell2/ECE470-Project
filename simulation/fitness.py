@@ -1,7 +1,7 @@
 import numpy as np
-from agent import Agent
+from agent.agent import Agent
 from typing import List
-from config import FitnessWeights, FITNESS_WEIGHTS, GRID_DIM
+from configs import FitnessWeights, FITNESS_WEIGHTS, GRID_DIM
 
 
 def calculate_fitness(followers: list[Agent], weights: FitnessWeights = FITNESS_WEIGHTS) -> float:

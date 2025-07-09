@@ -1,8 +1,7 @@
 import numpy as np
-from map_config import MapConfig
-from grid import GridWrapper
-
-from config import GRID_DIM, PERCENT_OBSTACLES, MIN_LEADER_PATH_DISTANCE, ENTRANCE_SIZE
+from map.map_structures import MapConfig
+from map.grid_utils import GridWrapper
+from configs import GRID_DIM, PERCENT_OBSTACLES, MIN_LEADER_PATH_DISTANCE
 
 def generate_n_map_configs(n: int) -> list[MapConfig]:
     """ Generates a list of n map configurations."""

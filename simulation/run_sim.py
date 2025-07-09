@@ -1,10 +1,10 @@
 import numpy as np
-from map_config import MapConfig
-from agent import Agent, AgentRole
-from grid import TileType
+from map.map_structures import MapConfig
+from agent.agent import Agent, AgentRole
+from map.grid_utils import TileType
 from simulation.movement import calculate_best_move
 from simulation.fitness import calculate_fitness
-from config import NUM_AGENTS, ENTRANCE_SIZE
+from configs import NUM_AGENTS, ENTRANCE_SIZE
 
 def run_simulation(genome, map_config: MapConfig) -> float:
     """

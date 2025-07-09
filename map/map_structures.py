@@ -1,7 +1,7 @@
-from agent import Agent, AgentRole
-from grid import GridWrapper, TileType
+from agent.agent import Agent, AgentRole
+from map.grid_utils import GridWrapper, TileType
 from dataclasses import dataclass
-from config import NUM_AGENTS
+from configs import NUM_AGENTS
 import numpy as np
 
 

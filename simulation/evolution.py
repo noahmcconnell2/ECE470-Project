@@ -1,7 +1,7 @@
 import random
 import numpy as np
-from simulation.run_simulation import run_simulation
-from config import (GA_POPULATION_SIZE, GA_GENERATIONS, GENOME_RANGE, 
+from simulation.run_sim import run_simulation
+from configs import (GA_POPULATION_SIZE, GA_GENERATIONS, GENOME_RANGE, 
                     NUM_ELITES, TOURNAMENT_GROUP_SIZE, RANDOM_SEED) 
 
 def run_genetic_algorithm(map_configs: list,

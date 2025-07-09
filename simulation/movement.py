@@ -40,9 +40,9 @@ Score range: [genome_min * 6, genome_max * 6] (e.g., [0, 30] if weights range fr
 Lower scores are preferred, representing more desirable moves.
 """
 
-from agent import Agent
+from agent.agent import Agent
 from typing import List, Tuple
-from map_config import MapConfig
+from map.map_structures import MapConfig
 
 
 def calculate_best_move(map_config, agent, leader):

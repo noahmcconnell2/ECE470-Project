@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple
 import enum
 
 class TileType(enum.IntEnum):

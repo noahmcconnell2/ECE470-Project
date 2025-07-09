@@ -1,7 +1,7 @@
 import enum
 from typing import List
 from dataclasses import dataclass
-from config import PERCEPTION_RANGE
+from configs import PERCEPTION_RANGE
 
 class AgentRole(enum.IntEnum):
     LEADER = 0
@@ -22,11 +22,6 @@ class Agent:
     obstacle_collision_count: int = 0  # Number of collisions with obstacles
     agent_collision_count: int = 0  # Number of collisions with other agents
     
-
-    def __init__(self, role: AgentRole, position: tuple[int, int]):
-        self.role = role
-        self.position = position  # (x, y) coordinates in the grid
-
     def __repr__(self):
         return f"Agent(role={self.role.name}, position={self.position})"
 
