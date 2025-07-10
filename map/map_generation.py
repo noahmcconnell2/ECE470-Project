@@ -3,6 +3,7 @@ import heapq
 import random
 from map.map_structures import MapConfig
 from map.grid_utils import GridWrapper
+from map.grid_utils import TileType
 from configs import GRID_DIM, PERCENT_OBSTACLES, MIN_LEADER_PATH_DISTANCE
 
 def generate_n_map_configs(n: int) -> list[MapConfig]:
@@ -81,7 +82,22 @@ def a_star(grid: np.ndarray, start: tuple[int,int], goal: tuple[int,int]) -> lis
     return []
 
 def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) -> GridWrapper:
-    pass
+    width, height = grid_dim
+    total_cells = width * height
+    num_obstacles = int(total_cells * percent_obstacles)
+
+    # Start with an empty grid
+    grid_array = np.full((height, width), TileType.EMPTY, dtype=int)
+
+    # Flatten indices and randomly choose obstacle positions
+    all_positions = [(x, y) for x in range(width) for y in range(height)]
+    obstacle_positions = random.sample(all_positions, num_obstacles)
+
+    for pos in obstacle_positions:
+        x, y = pos
+        grid_array[y, x] = TileType.OBSTACLE  # numpy: (row, col) = (y, x)
+
+    return GridWrapper(grid_array)
 
 def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int, int]]:
     # uses get_valid_leader_starts to get valid starting positions for the leader
