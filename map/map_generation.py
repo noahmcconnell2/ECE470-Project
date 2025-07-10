@@ -102,6 +102,7 @@ def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int,
 def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
     pass
 
+#needs to return List not Gridwrapper
 def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
     #given a leader path and grid shape, build a 2d array where each cell holds Manhattan distance to the closest point on the leader path
     w, h = grid_shape
