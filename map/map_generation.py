@@ -4,6 +4,7 @@ import random
 from map.map_structures import MapConfig
 from map.grid_utils import GridWrapper
 from configs import GRID_DIM, PERCENT_OBSTACLES, MIN_LEADER_PATH_DISTANCE
+from collections import deque
 
 def generate_n_map_configs(n: int) -> list[MapConfig]:
     """ Generates a list of n map configurations."""
@@ -77,7 +78,7 @@ def a_star(grid: np.ndarray, start: tuple[int,int], goal: tuple[int,int]) -> lis
             if 0 <= nx < w and 0 <= ny < h and grid[nx][ny] == 0:
                 next_node = (nx, ny)
                 heapq.heappush(open_set, (g + 1 + heuristic(next_node, goal), g + 1, next_node, path + [next_node]))
-    
+
     return []
 
 def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) -> GridWrapper:
@@ -85,10 +86,39 @@ def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) 
 
 def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int, int]]:
     # uses get_valid_leader_starts to get valid starting positions for the leader
-    pass
+    entrance_width = 2
+    possible = get_valid_leader_starts(grid.shape, entrance_width)
+    random.shuffle(possible)
+
+    #Picks from the generated paths to find one that fits our requirement and returns said path
+    for start in possible:
+        for goal in possible:
+            if start == goal:
+                continue
+            path = a_star(grid, start, goal)
+            if len(path) >= min_distance:
+                return path
 
 def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
     pass
 
 def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
-    pass
+    #given a leader path and grid shape, build a 2d array where each cell holds Manhattan distance to the closest point on the leader path
+    w, h = grid_shape
+    distance_map = np.full((w,h), np.inf)
+    #double ended Queue
+    queue = deque()
+
+    for x, y in leader_path:
+        distance_map[x][y] = 0
+        queue.append((x, y))
+
+    while queue:
+        x,y = queue.popleft()
+        for dx,dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h:
+                if distance_map[nx][ny] < distance_map[x][y]+1:
+                    distance_map[nx][ny] = distance_map[x][y]+1
+                    queue.append((nx, ny))
+    return GridWrapper(distance_map)
