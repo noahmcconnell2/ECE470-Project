@@ -138,22 +138,5 @@ def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
 #needs to return List not Gridwrapper
 def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
     #given a leader path and grid shape, build a 2d array where each cell holds Manhattan distance to the closest point on the leader path
-    # w, h = grid_shape
-    # distance_map = np.full((w,h), np.inf)
-    # #double ended Queue
-    # queue = deque()
-    #
-    # for x, y in leader_path:
-    #     distance_map[x][y] = 0
-    #     queue.append((x, y))
-    #
-    # while queue:
-    #     x,y = queue.popleft()
-    #     for dx,dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-    #         nx, ny = x + dx, y + dy
-    #         if 0 <= nx < w and 0 <= ny < h:
-    #             if distance_map[nx][ny] < distance_map[x][y]+1:
-    #                 distance_map[nx][ny] = distance_map[x][y]+1
-    #                 queue.append((nx, ny))
-    # return GridWrapper(distance_map)
+
     pass
