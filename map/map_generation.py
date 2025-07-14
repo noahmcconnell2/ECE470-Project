@@ -131,9 +131,17 @@ def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int,
     return []
 
 
-
-
 def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper: 
+    """
+    Computes a distance map for the obstacles in a grid. Computes the Chebyshev distance from each cell to the nearest obstacle.
+    Args:
+        grid (np.ndarray): 2D numpy array representing the grid, where each cell is either an obstacle or empty.
+    Returns:
+        GridWrapper: A grid wrapper containing the distance map, where each cell holds the Chebyshev distance to the closest obstacle.
+
+    Needed Fixes:
+     - add diagonal neighbors to the distance calculation
+    """
     height, width = grid.shape
     distance_map = np.full((height, width), -1, dtype=int)  # -1 means unvisited
     queue = deque()
@@ -159,8 +167,37 @@ def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
 
     return GridWrapper(distance_map)
 
-#needs to return List not Gridwrapper
-def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
-    #given a leader path and grid shape, build a 2d array where each cell holds Manhattan distance to the closest point on the leader path
 
-    pass
+def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
+    """
+    Computes a distance map for the leader path in a grid. Computes the Chebyshev distance from each cell to the nearest point on the leader path.
+    Args:
+        leader_path (list[tuple[int, int]]): List of coordinates representing the leader path.
+        grid_shape (tuple[int, int]): Shape of the grid as (width, height).
+    Returns:
+        GridWrapper: A grid wrapper containing the distance map, where each cell holds the Chebyshev distance to the closest point on the leader path.
+
+    Needed Fixes:
+     - change to [y, x] indexing for numpy arrays
+     - add the diagonal neighbors to the distance calculation
+     - reverse the equality operator in the if statement to check if the distance is greater than the current distance + 1
+    """
+    #given a leader path and grid shape, build a 2d array where each cell holds Chebyshev distance to the closest point on the leader path
+    w, h = grid_shape
+    distance_map = np.full((w,h), np.inf)
+    #double ended Queue
+    queue = deque()
+
+    for x, y in leader_path:
+        distance_map[x][y] = 0 
+        queue.append((x, y))
+
+    while queue:
+        x,y = queue.popleft()
+        for dx,dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h:
+                if distance_map[nx][ny] < distance_map[x][y]+1:
+                    distance_map[nx][ny] = distance_map[x][y]+1
+                    queue.append((nx, ny))
+    return GridWrapper(distance_map)
