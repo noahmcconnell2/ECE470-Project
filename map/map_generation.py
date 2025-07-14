@@ -6,6 +6,7 @@ from map.map_structures import MapConfig
 from map.grid_utils import GridWrapper
 from map.grid_utils import TileType
 from configs import GRID_DIM, PERCENT_OBSTACLES, MIN_LEADER_PATH_DISTANCE
+from collections import deque
 
 def generate_n_map_configs(n: int) -> list[MapConfig]:
     """ Generates a list of n map configurations."""
@@ -76,10 +77,10 @@ def a_star(grid: np.ndarray, start: tuple[int,int], goal: tuple[int,int]) -> lis
 
         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             nx, ny = current[0] + dx, current[1] + dy
-            if 0 <= nx < w and 0 <= ny < h and grid[nx][ny] == 0:
+            if w > nx >= 0 == grid[nx][ny] and 0 <= ny < h:
                 next_node = (nx, ny)
                 heapq.heappush(open_set, (g + 1 + heuristic(next_node, goal), g + 1, next_node, path + [next_node]))
-    
+
     return []
 
 def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) -> GridWrapper:
@@ -101,8 +102,36 @@ def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) 
     return GridWrapper(grid_array)
 
 def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int, int]]:
-    # uses get_valid_leader_starts to get valid starting positions for the leader
-    pass
+    entrance_width = 3
+    possible_endpoints = get_valid_leader_starts(grid.shape[::-1], entrance_width)
+
+    #set a max number of attempts to find a valid start and end
+    max_attempts = 100
+    attempt = 0
+
+    while attempt < max_attempts:
+        attempt +=1
+
+        #choose a random point from possible_endpoints
+        if len(possible_endpoints) == 0:
+            print ("Not eneough endpoints, for a valid leader path")
+            return []
+        #pick a random endpoint and start
+        start, goal = random.choice(possible_endpoints)
+
+        if grid[start[1]][start[0]] == TileType.OBSTACLE or grid[goal[1]][goal[0]] == TileType.OBSTACLE:
+            continue
+        #perform a_star from start to goal if its valid
+        path = a_star(grid, start, goal)
+        #make sure that the path we got is bigger than the min distance that we set
+        if path and len(path) >= min_distance:
+            return path
+
+    print("Could not find a valid path!")
+    return []
+
+
+
 
 def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper: 
     height, width = grid.shape
@@ -130,5 +159,8 @@ def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
 
     return GridWrapper(distance_map)
 
+#needs to return List not Gridwrapper
 def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
+    #given a leader path and grid shape, build a 2d array where each cell holds Manhattan distance to the closest point on the leader path
+
     pass
