@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 import heapq
 import random
 from map.map_structures import MapConfig
@@ -103,8 +104,31 @@ def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int,
     # uses get_valid_leader_starts to get valid starting positions for the leader
     pass
 
-def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
-    pass
+def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper: 
+    height, width = grid.shape
+    distance_map = np.full((height, width), -1, dtype=int)  # -1 means unvisited
+    queue = deque()
+
+    #Enqueue all obstacle tiles, set distance to 0
+    for y in range(height):
+        for x in range(width):
+            if grid[y, x] == TileType.OBSTACLE:
+                distance_map[y, x] = 0
+                queue.append((x, y))  # enqueue in (x, y) form
+
+    #Use BFS from all obstacle tiles
+    while queue:
+        x, y = queue.popleft()
+        current_distance = distance_map[y, x]
+
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]: # check the four adjacent neighbors of the current grid cell
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < width and 0 <= ny < height:
+                if distance_map[ny, nx] == -1:
+                    distance_map[ny, nx] = current_distance + 1
+                    queue.append((nx, ny))
+
+    return GridWrapper(distance_map)
 
 def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
     pass
