@@ -182,6 +182,7 @@ def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_sh
          - add the diagonal neighbors to the distance calculation
          - reverse the equality operator in the if statement to check if the distance is greater than the current distance + 1
         """
+    
     # given a leader path and grid shape, build a 2d array where each cell holds Chebyshev distance to the closest point on the leader path
     w, h = grid_shape
     distance_map = np.full((w, h), np.inf)
