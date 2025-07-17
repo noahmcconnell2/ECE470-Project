@@ -159,7 +159,8 @@ def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
         x, y = queue.popleft()
         current_distance = distance_map[y, x]
 
-        for dx, dy in [(-1,1), (-1, 0), (-1, -1), (1, 0), (0, -1), (1, 1), (-1, 1), (0, 1)]: # check the four adjacent neighbors of the current grid cell
+        for dx, dy in [(-1,1), (-1, 0), (-1, -1), (1, 0), 
+                       (0, -1), (1, 1), (-1, 1), (0, 1)]: # check the four adjacent neighbors of the current grid cell
             nx, ny = x + dx, y + dy
             if 0 <= nx < width and 0 <= ny < height:
                 if distance_map[ny, nx] == -1:
@@ -176,30 +177,26 @@ def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_sh
             grid_shape (tuple[int, int]): Shape of the grid as (width, height).
         Returns:
             GridWrapper: A grid wrapper containing the distance map, where each cell holds the Chebyshev distance to the closest point on the leader path.
-
-        Needed Fixes:
-         - change to [y, x] indexing for numpy arrays
-         - add the diagonal neighbors to the distance calculation
-         - reverse the equality operator in the if statement to check if the distance is greater than the current distance + 1
         """
     
     # given a leader path and grid shape, build a 2d array where each cell holds Chebyshev distance to the closest point on the leader path
     w, h = grid_shape
-    distance_map = np.full((w, h), np.inf)
+    distance_map = np.full((h, w), np.inf)
     # double ended Queue
     queue = deque()
 
     for x, y in leader_path:
-        distance_map[x][y] = 0
+        distance_map[y][x] = 0
         queue.append((x, y))
 
     while queue:
         x, y = queue.popleft()
-        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1),
+                       (-1, 1), (-1, -1), (1, -1), (1, 1)]:
             nx, ny = x + dx, y + dy
             if 0 <= nx < w and 0 <= ny < h:
-                if distance_map[nx][ny] < distance_map[x][y] + 1:
-                    distance_map[nx][ny] = distance_map[x][y] + 1
+                if distance_map[ny][nx] > distance_map[y][x] + 1:
+                    distance_map[ny][nx] = distance_map[y][x] + 1
                     queue.append((nx, ny))
     return GridWrapper(distance_map)
 
