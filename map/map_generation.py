@@ -76,7 +76,7 @@ def a_star(grid: np.ndarray, start: tuple[int,int], goal: tuple[int,int]) -> lis
         visited.add(current)
 
         for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1),
-                       (-1, -1), (-1, 1), (1, 1)]:
+                       (1,-1),(-1, -1), (-1, 1), (1, 1)]:
             ny, nx = current[0] + dy, current[1] + dx
             if 0 <= ny < h and 0 <= nx < w and grid[ny][nx] == 0:
                 next_node = (ny, nx)
