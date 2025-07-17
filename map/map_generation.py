@@ -159,7 +159,7 @@ def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
         x, y = queue.popleft()
         current_distance = distance_map[y, x]
 
-        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]: # check the four adjacent neighbors of the current grid cell
+        for dx, dy in [(-1,1), (-1, 0), (-1, -1), (1, 0), (0, -1), (1, 1), (-1, 1), (0, 1)]: # check the four adjacent neighbors of the current grid cell
             nx, ny = x + dx, y + dy
             if 0 <= nx < width and 0 <= ny < height:
                 if distance_map[ny, nx] == -1:
