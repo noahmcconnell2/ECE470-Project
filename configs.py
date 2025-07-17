@@ -1,5 +1,6 @@
 # configs.py
 from typing import NamedTuple
+import numpy as np
 
 # ===============================
 # Train/Test Configurations
@@ -20,6 +21,12 @@ MIN_LEADER_PATH_DISTANCE = int(GRID_DIM[0] * 0.2)
 # ===============================
 NUM_AGENTS = 10
 PERCEPTION_RANGE = 5
+
+
+# ===============================
+# Movement Settings
+# ===============================
+ISOLATION_PENALTY = round((np.sqrt(2 * PERCEPTION_RANGE**2) / 2) + 2, 2)
 
 # ===============================
 # Genetic Algorithm Settings
