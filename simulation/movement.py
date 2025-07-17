@@ -61,8 +61,8 @@ def calculate_best_move(map_config, agent, leader):
         tuple[int, int]: The (x, y) coordinates of the best next move.
     """
 
-    # Get all valid candidate moves (Moore neighborhood + stay)
-    possible_moves = get_valid_moves(agent.position, map_config.grid)
+    # Get all in-bounds candidate moves (Moore neighborhood + stay)
+    possible_moves = get_all_moves(agent.position, map_config.grid)
 
     move_scores = []
 
@@ -94,11 +94,8 @@ def calculate_best_move(map_config, agent, leader):
     best_move = min(move_scores, key=lambda x: x[0])[1]
     return best_move
 
-def get_valid_moves(position: Tuple[int, int], grid) -> List[Tuple[int, int]]:
-    return [
-        move for move in grid.get_neighborhood(position)
-        if grid.get(move) == FREE
-    ]
+def get_all_moves(position: Tuple[int, int], grid) -> List[Tuple[int, int]]:
+    return grid.get_neighborhood(position)
 
 
 
@@ -178,6 +175,8 @@ def calculate_separation(next_move: Tuple[int, int], nearest_agent: Agent) -> fl
         return 1.0  # Full penalty when isolated 
     
     distance = np.sqrt((nearest_agent.position[0] - next_move[0]) ** 2 + (nearest_agent.position[1] - next_move[1]) ** 2)
+    if distance == 0:
+        return 1.0
     normalized_distance = normalize_feature(distance, ISOLATION_PENALTY)
 
     return 1/ normalized_distance 
@@ -194,7 +193,11 @@ def calculate_obstacle_avoidance(next_move: Tuple[int, int], map_config: MapConf
 
     1 / normalized_distance
     """
-    normalized_distance = normalize_feature(map_config.obstacle_distance_map.get(next_move), MAX_DISTANCE)
+    distance = map_config.obstacle_distance_map.get(next_move)
+    if distance is None or distance == 0:
+        return 1.0  # Full penalty if no distance data or colliding
+    
+    normalized_distance = normalize_feature(distance, MAX_DISTANCE)
 
     return 1 / normalized_distance
     
