@@ -26,11 +26,9 @@ class Agent:
         return f"Agent(role={self.role.name}, position={self.position})"
 
     def move(self, new_position: tuple[int, int]):
-        pass
+        self.position = new_position
 
-    def update_heading(self, new_heading: tuple[int, int]):
-        pass
-
-
-
-
+    def update_heading(self, next_move: tuple[int, int]):
+        dx = next_move[0] - self.position[0]
+        dy = next_move[1] - self.position[1]
+        self.heading = (dx, dy)

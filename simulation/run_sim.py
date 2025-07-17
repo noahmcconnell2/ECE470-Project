@@ -39,11 +39,11 @@ def run_simulation(genome, map_config: MapConfig) -> float:
         # Advance each agent
         for agent in followers:
             if agent.role == AgentRole.FOLLOWER:
-                next_move = calculate_best_move(map_config, agent, leader)
+                next_move = calculate_best_move(map_config, agent, leader) # Guaranteed to return an in-bounds move
                 if map_config.grid[next_move] == TileType.EMPTY:
                    old_position = agent.position
                    agent.move(next_move)
-                   agent.update_heading(next_move, old_position)  # Update heading based on the new position
+                   agent.update_heading(next_move)  # Update heading based on the new position
                    map_config.update(old_position, agent)  # Update agent_index and grid with the new position
 
                 elif map_config.grid[next_move] == TileType.OBSTACLE:
