@@ -1,5 +1,6 @@
 # configs.py
 from typing import NamedTuple
+import numpy as np
 
 # ===============================
 # Train/Test Configurations
@@ -21,6 +22,14 @@ MIN_LEADER_PATH_DISTANCE = int(GRID_DIM[0] * 0.2)
 NUM_AGENTS = 10
 PERCEPTION_RANGE = 5
 
+
+# ===============================
+# Movement Settings
+# ===============================
+ISOLATION_PENALTY = round((np.sqrt(2 * PERCEPTION_RANGE**2) / 2) + 2, 2)
+MAX_DISTANCE = np.sqrt(GRID_DIM[0]**2 + GRID_DIM[1]**2)
+
+
 # ===============================
 # Genetic Algorithm Settings
 # ===============================
@@ -32,7 +41,7 @@ TOURNAMENT_GROUP_SIZE = 3
 RANDOM_SEED = 42
 
 # ===============================
-# Fitness Weights (Normalized Importance)
+# Fitness Settings
 # ===============================
 class FitnessWeights(NamedTuple):
     """Fitness evaluation weights:
@@ -47,3 +56,5 @@ class FitnessWeights(NamedTuple):
     agent_collisions: float
 
 FITNESS_WEIGHTS = FitnessWeights(1.0, 1.0, 1.0, 1.0)
+MAX_COLLISIONS = 1.0
+MAX_FITNESS = 1e6  # Arbitrary large value for no followers
