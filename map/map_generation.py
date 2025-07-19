@@ -6,12 +6,11 @@ from map.map_structures import MapConfig
 from map.grid_utils import GridWrapper
 from map.grid_utils import TileType
 from configs import GRID_DIM, PERCENT_OBSTACLES, MIN_LEADER_PATH_DISTANCE
-from collections import deque
 
 def generate_n_map_configs(n: int) -> list[MapConfig]:
     """ Generates a list of n map configurations."""
     map_configs = []
-    for _ in range(5):
+    for _ in range(n):
         map_config = generate_map_config()
         map_configs.append(map_config)
     return map_configs
@@ -118,7 +117,7 @@ def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int,
             print ("Not eneough endpoints, for a valid leader path")
             return []
         #pick a random endpoint and start
-        start, goal = random.choice(possible_endpoints)
+        start, goal = random.sample(possible_endpoints, 2)
 
         if grid[start[1]][start[0]] == TileType.OBSTACLE or grid[goal[1]][goal[0]] == TileType.OBSTACLE:
             continue
