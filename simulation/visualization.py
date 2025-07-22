@@ -33,71 +33,71 @@ class SwarmVisualizer:
         pygame.display.set_caption("Swarm Simulation")
 
 
-def draw_tile(self, x: int, y: int, colour: tuple):
-    """
-    Draw a single tile at grid position (x, y) with the given colour.
-    Converts grid coordinates to pixel coordinates and draws a rectangle.
-    """
+    def draw_tile(self, x: int, y: int, colour: tuple):
+        """
+        Draw a single tile at grid position (x, y) with the given colour.
+        Converts grid coordinates to pixel coordinates and draws a rectangle.
+        """
 
-    pixel_x = x * TILE_SIZE
-    pixel_y = y * TILE_SIZE
-    pygame.draw.rect(self.screen, colour, (pixel_x, pixel_y, TILE_SIZE, TILE_SIZE))
+        pixel_x = x * TILE_SIZE
+        pixel_y = y * TILE_SIZE
+        pygame.draw.rect(self.screen, colour, (pixel_x, pixel_y, TILE_SIZE, TILE_SIZE))
 
 
-def draw_grid(self):
-    """
-    Draw the complete grid (including obstacles, path and agents).
-    """
+    def draw_grid(self):
+        """
+        Draw the complete grid (including obstacles, path and agents).
+        """
 
-    self.screen.fill(COLOURS['empty']) # fill background
+        self.screen.fill(COLOURS['empty']) # fill background
 
-    for x in range(self.grid_width):
-        for y in range(self.grid_height):
-            tile_type = self.map_config.grid.get((x, y))
-            if tile_type == TileType.OBSTACLE:
-                self.draw_cell(x, y, COLOURS['obstacle'])
-            elif tile_type == TileType.EMPTY:
-                self.draw_cell(x, y, COLOURS['empty'])
-            elif tile_type == TileType.AGENT:
-                self.draw_cell(x, y, COLOURS['empty'])
+        for x in range(self.grid_width):
+            for y in range(self.grid_height):
+                tile_type = self.map_config.grid.get((x, y))
+                if tile_type == TileType.OBSTACLE:
+                    self.draw_tile(x, y, COLOURS['obstacle'])
+                elif tile_type == TileType.EMPTY:
+                    self.draw_tile(x, y, COLOURS['empty'])
+                elif tile_type == TileType.AGENT:
+                    self.draw_tile(x, y, COLOURS['empty'])
 
-    # Draw leader path
-    for x, y in self.map_config.leader_path:
-        # Only draw path if no agent is currently on this tile
-        if self.map_config.grid.get((x, y)) != TileType.AGENT:
-            self.draw_cell(x, y, COLOURS['path'])
+        # Draw leader path
+        for x, y in self.map_config.leader_path:
+            # Only draw path if no agent is currently on this tile
+            if self.map_config.grid.get((x, y)) != TileType.AGENT:
+                self.draw_tile(x, y, COLOURS['path'])
+            
+        # Draw agents on top of everything else
+        if self.map_config.agent_index:
+            for position, agent in self.map_config.agent_index.items():
+                if agent.role == AgentRole.LEADER:
+                    self.draw_tile(position[0], position[1], COLOURS['leader'])
+                elif agent.role == AgentRole.FOLLOWER:
+                    self.draw_tile(position[0], position[1], COLOURS['follower'])
+
+        # Update the display
+        pygame.display.flip()
+
+
+    def run_frame(self) -> bool:
+        """
+        Process events and draw one frame. Returns False if visualization should stop.
+        """
+        # Handle pygame events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
         
-    # Draw agents on top of everything else
-    if self.map_config.agent_index:
-        for position, agent in self.map_config.agent_index.items():
-            if agent.role == AgentRole.LEADER:
-                self.draw_cell(position[0], position[1], COLOURS['leader'])
-            elif agent.role == AgentRole.FOLLOWER:
-                self.draw_cell(position[0], position[1], COLOURS['follower'])
-
-    # Update the display
-    pygame.display.flip()
+        # Draw the current state
+        self.draw_grid()
+        return True
 
 
-def run_frame(self) -> bool:
-    """
-    Process events and draw one frame. Returns False if visualization should stop.
-    """
-    # Handle pygame events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            return False
-    
-    # Draw the current state
-    self.draw_grid()
-    return True
-
-
-def close(self):
-    """
-    Clean up pygame resources.
-    """
-    pygame.quit()
+    def close(self):
+        """
+        Clean up pygame resources.
+        """
+        pygame.quit()
 
 
 def visualize_simulation(map_config: MapConfig, delay_ms: int = 100):
