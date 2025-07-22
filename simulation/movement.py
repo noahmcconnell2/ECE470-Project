@@ -44,33 +44,21 @@ import numpy as np
 from agent.agent import Agent
 from typing import List, Tuple
 from map.map_structures import MapConfig
-from map.grid_utils import FREE
-from configs import ISOLATION_PENALTY, MAX_DISTANCE
+from configs import ISOLATION_PENALTY, MAX_DISTANCE, SEDENTARY_PENALTY
 
 
-def calculate_best_move(map_config, agent, leader):
+def rank_moves_by_score(map_config, agent, leader) -> List[Tuple[float, Tuple[int, int]]]:
     """
-    Calculate the best move for an agent based on the weighted score of behavioral features.
-
-    Args:
-        map_config (MapConfig): The current map configuration including grid, agent index, and distance maps.
-        agent (Agent): The follower agent for which to compute the next move.
-        leader (Agent): The leader agent whose path and position are used for reference.
-
-    Returns:
-        tuple[int, int]: The (x, y) coordinates of the best next move.
+    Return a sorted list of candidate moves from best to worst based on total score.
     """
-
-    # Get all in-bounds candidate moves (Moore neighborhood + stay)
     possible_moves = get_all_moves(agent.position, map_config.grid)
+    entrance_positions = set(map_config.get_entrance_positions())
 
     move_scores = []
 
     for move in possible_moves:
-        # Get agents in perception range as well as the nearest agent
-        nearby_agents, nearest_agent = get_agents_in_perception(move, agent.perception_range, map_config)
+        nearby_agents, nearest_agent = get_agents_in_perception(agent, move, agent.perception_range, map_config)
 
-        # Calculate normalized feature costs
         cohesion   = calculate_cohesion(move, nearby_agents)
         separation = calculate_separation(move, nearest_agent)
         avoidance  = calculate_obstacle_avoidance(move, map_config)
@@ -78,7 +66,6 @@ def calculate_best_move(map_config, agent, leader):
         leader_dist = calculate_leader_distance(move, leader.position)
         alignment   = calculate_alignment(agent.position, move, nearby_agents)
 
-        # Compute total score using genome weights
         total_score = (
             cohesion     * agent.genome[0] +
             separation   * agent.genome[1] +
@@ -88,11 +75,16 @@ def calculate_best_move(map_config, agent, leader):
             alignment    * agent.genome[5]
         )
 
+        if move == agent.position:
+            total_score += SEDENTARY_PENALTY
+
+        if move in entrance_positions:
+            total_score += SEDENTARY_PENALTY  # discourage unless necessary
+
         move_scores.append((total_score, move))
 
-    # Choose the move with the lowest total score
-    best_move = min(move_scores, key=lambda x: x[0])[1]
-    return best_move
+    return sorted(move_scores, key=lambda x: x[0])
+
 
 def get_all_moves(position: Tuple[int, int], grid) -> List[Tuple[int, int]]:
     return grid.get_neighborhood(position)
