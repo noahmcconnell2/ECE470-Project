@@ -4,7 +4,7 @@ from agent.agent import Agent, AgentRole
 from map.grid_utils import TileType
 from simulation.movement import rank_moves_by_score
 from simulation.fitness import calculate_fitness
-from configs import NUM_AGENTS, ENTRANCE_SIZE
+from configs import NUM_AGENTS, ENTRANCE_SIZE, POST_GOAL_BUFFER_STEPS, FOLLOWER_STAGGER_INTERVAL
 
 def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> float:
     """
@@ -26,19 +26,22 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
     leader = Agent(AgentRole.LEADER, map_config.leader_path[0], initial_heading, genome=genome)
     map_config.update(old_position=None, agent=leader)  # Update agent_index and grid with the leader's initial position
 
-    # Loop until leader reaches goal
-    while leader.position != map_config.leader_path[-1]:
+    # Loop until leader reaches goal plus a few extra steps
+    for count in range(len(map_config.leader_path) + POST_GOAL_BUFFER_STEPS):  # Allow some extra steps to ensure followers can catch up
         # --- Update leader's attributes ---
-        next_move = map_config.leader_path[leader.step_count + 1]
-        old_position = leader.position
-        leader.move(next_move)  # Move leader to next position
+        if leader.step_count + 1 < len(map_config.leader_path):
+            next_move = map_config.leader_path[leader.step_count + 1]
+            old_position = leader.position
+            leader.move(next_move)  # Move leader to next position
+            leader.heading = (next_move[0] - old_position[0], next_move[1] - old_position[1])
+            map_config.update(old_position, leader) # update agent_index and grid using the next move and leaders current position
+
         leader.path.append(leader.position)
-        map_config.update(old_position, leader) # update agent_index and grid using the next move and leaders current position 
         leader.step_count += 1  # Increment step count for leader
         # ---- End of leader update --
 
         # Add followers to entrance after first step until NUM_followers are present
-        if len(followers) < NUM_AGENTS - 1 and leader.step_count > 0:
+        if (count + 1) % FOLLOWER_STAGGER_INTERVAL == 0 and len(followers) < NUM_AGENTS - 1:
             map_config.add_followers(ENTRANCE_SIZE, followers, genome=genome, leader=leader)
 
         # print(f"Step {leader.step_count}: Followers = {len(followers)}")
@@ -54,11 +57,11 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
             ranked_moves = rank_moves_by_score(map_config, agent, leader)
             for score, next_move in ranked_moves:
                 if next_move == agent.position or map_config.grid.get(next_move) == TileType.EMPTY:
-                    old_pos = agent.position
+                    old_position = agent.position
                     agent.move(next_move)
                     agent.path.append(agent.position)
-                    agent.heading = (next_move[0] - old_pos[0], next_move[1] - old_pos[1])
-                    map_config.update(old_pos, agent)
+                    agent.heading = (next_move[0] - old_position[0], next_move[1] - old_position[1])
+                    map_config.update(old_position, agent)
                     
                     # Update metrics after successful move
                     agent.step_count += 1

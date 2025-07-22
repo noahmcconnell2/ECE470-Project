@@ -62,7 +62,8 @@ def main():
         for j, agent in enumerate(stat['agents']):
             print(f"    Agent {j+1}:")
             print(f"      steps: {agent['step_count']}")
-            print(f"      collisions: {agent['obstacle_collision_count']} (agent: {agent['agent_collision_count']})")
+            print(f"      obst. collisions: {agent['obstacle_collision_count']}")
+            print(f"      agent collisions: {agent['agent_collision_count']}")
             print(f"      path_dist: {float(agent['path_distance_sum']):.1f}")
             print(f"      leader_dist: {float(agent['leader_distance_sum']):.1f}")
             print(f"      path: {agent['path']}")
