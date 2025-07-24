@@ -23,6 +23,10 @@ class GridWrapper:
     """
     grid: np.ndarray
 
+    def raw(self) -> np.ndarray:
+        """Return the raw numpy array."""
+        return self.grid
+
     def get(self, pos: Tuple[int, int]):
         """Get the value at (x, y) position."""
         if not self.in_bounds(pos):
