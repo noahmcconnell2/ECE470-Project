@@ -6,18 +6,17 @@ from map.map_structures import MapConfig
 from map.grid_utils import GridWrapper
 from map.grid_utils import TileType
 from configs import GRID_DIM, PERCENT_OBSTACLES, MIN_LEADER_PATH_DISTANCE
-from collections import deque
 
 def generate_n_map_configs(n: int) -> list[MapConfig]:
     """ Generates a list of n map configurations."""
     map_configs = []
-    for _ in range(5):
-        map_config = generate_map_config()
+    for i in range(n):
+        map_config = generate_map_config(index=i,)
         map_configs.append(map_config)
     return map_configs
 
 
-def generate_map_config(grid_dim: tuple[int, int]= GRID_DIM, 
+def generate_map_config(index: int, grid_dim: tuple[int, int]= GRID_DIM, 
                         percent_obstacles: float = PERCENT_OBSTACLES,
                         min_leader_path_distance: int = MIN_LEADER_PATH_DISTANCE
                         ) -> MapConfig:
@@ -31,13 +30,15 @@ def generate_map_config(grid_dim: tuple[int, int]= GRID_DIM,
     obstacle_distance_map = compute_obstacle_distance_map(grid_np)
     leader_path_distance_map = compute_leader_path_distance_map(leader_path, grid_dim)
     agent_index = {} # Add all grid positions to agent index with value None
+    config = MapConfig(grid, leader_path, obstacle_distance_map, leader_path_distance_map, agent_index)
+    config.name = f"MapConfig_{index}"
 
-    return MapConfig(grid, leader_path, obstacle_distance_map, leader_path_distance_map, agent_index)
+    return config
 
 
 def get_valid_leader_starts(grid_shape: tuple[int, int], entrance_width: int) -> list[tuple[int, int]]:
     h, w = grid_shape
-    half = entrance_width // 2
+    half = (entrance_width // 2) + 3
     starts = []
 
     # Top edge (avoid corners)
@@ -118,7 +119,7 @@ def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int,
             print ("Not eneough endpoints, for a valid leader path")
             return []
         #pick a random endpoint and start
-        start, goal = random.choice(possible_endpoints)
+        start, goal = random.sample(possible_endpoints, 2)
 
         if grid[start[1]][start[0]] == TileType.OBSTACLE or grid[goal[1]][goal[0]] == TileType.OBSTACLE:
             continue

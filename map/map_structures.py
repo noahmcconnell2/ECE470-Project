@@ -16,6 +16,7 @@ class MapConfig:
     obstacle_distance_map: np.ndarray
     leader_path_distance_map: np.ndarray
     agent_index: dict[tuple[int, int], Agent] = None
+    name: str = "UnnamedMap"
 
     def update(self, old_position: tuple[int, int], agent: Agent):
         """
@@ -81,3 +82,32 @@ class MapConfig:
                 agent = Agent(AgentRole.FOLLOWER, pos, leader.heading, genome)
                 followers.append(agent)
                 self.update(old_position=None, agent=agent)  # Update agent index and grid with the new follower
+                agent.step_count += 1
+                
+            # else:
+            #     print(f"Blocked: Cannot add follower at {pos} – Tile = {self.grid.get(pos)}")
+
+
+    def get_entrance_positions(self) -> list[tuple[int, int]]:
+        """
+        Return a static list of entrance coordinates based on the initial leader position and entrance size.
+        """
+        from configs import ENTRANCE_SIZE  # Local import to avoid circular dependency
+
+        x, y = self.leader_path[0]
+        w, h = self.grid.shape()
+        half = ENTRANCE_SIZE // 2
+        entrance = []
+
+        if y == 0 or y == h - 1:
+            for dx in range(-half, half + 1):
+                fx = x + dx
+                if 0 <= fx < w:
+                    entrance.append((fx, y))
+        elif x == 0 or x == w - 1:
+            for dy in range(-half, half + 1):
+                fy = y + dy
+                if 0 <= fy < h:
+                    entrance.append((x, fy))
+
+        return entrance

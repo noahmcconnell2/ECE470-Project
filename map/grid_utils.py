@@ -23,8 +23,14 @@ class GridWrapper:
     """
     grid: np.ndarray
 
+    def raw(self) -> np.ndarray:
+        """Return the raw numpy array."""
+        return self.grid
+
     def get(self, pos: Tuple[int, int]):
         """Get the value at (x, y) position."""
+        if not self.in_bounds(pos):
+            raise IndexError(f"Position {pos} is out of bounds for grid shape {self.grid.shape}.") 
         x, y = pos
         return self.grid[y, x]  # NumPy uses [row, col] = [y, x]
 
@@ -42,3 +48,15 @@ class GridWrapper:
         """Check if (x, y) position is inside the grid bounds."""
         x, y = pos
         return 0 <= y < self.grid.shape[0] and 0 <= x < self.grid.shape[1]
+    
+    def get_neighborhood(self, pos: Tuple[int, int]) -> list[Tuple[int, int]]:
+        """Get the Moore neighborhood of (x, y) position - includes current position."""
+        x, y = pos
+        neighborhood = []
+        for dy in [-1, 0, 1]:
+            for dx in [-1, 0, 1]:
+                tx, ty = x + dx, y + dy
+                if self.in_bounds((tx, ty)):
+                    neighborhood.append((tx, ty))
+
+        return neighborhood
