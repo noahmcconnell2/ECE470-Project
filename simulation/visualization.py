@@ -32,6 +32,8 @@ class SwarmVisualizer:
         self.screen = pygame.display.set_mode((self.window_width, self.window_height))
         pygame.display.set_caption("Swarm Simulation")
 
+        self.clock = pygame.time.Clock() 
+
 
     def draw_tile(self, x: int, y: int, colour: tuple):
         """
@@ -79,17 +81,22 @@ class SwarmVisualizer:
         pygame.display.flip()
 
 
-    def run_frame(self) -> bool:
+    def run_frame(self, fps=7) -> bool:
         """
-        Process events and draw one frame. Returns False if visualization should stop.
+        Draw one frame and handle events.
+        - fps: Frames per second target
+        - wait_for_keypress: If True, pauses simulation waiting for R or Enter key
+        Returns:
+            False if window closed, True otherwise.
         """
         # Handle pygame events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return False
+                return False 
         
         # Draw the current state
         self.draw_grid()
+        self.clock.tick(fps)  # control FPS 
         return True
 
 

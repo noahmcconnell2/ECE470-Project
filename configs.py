@@ -6,7 +6,7 @@ import numpy as np
 # Train/Test Configurations
 # ===============================
 NUM_TRAINING_CONFIGS = 2
-NUM_TESTING_CONFIGS = 1
+NUM_TESTING_CONFIGS = 3
 
 # ===============================
 # Grid and Environment Settings
@@ -79,4 +79,4 @@ MAX_FITNESS = 1e6  # Arbitrary large value for no followers
 # ===============================
 # Testing Settings
 # ===============================
-ENABLE_TESTING = False
+ENABLE_TESTING = True

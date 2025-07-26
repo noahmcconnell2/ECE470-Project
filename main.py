@@ -71,7 +71,7 @@ def main():
 
     # --- Testing Section (feature flag) --- 
     if ENABLE_TESTING:
-        print("Testing enabled. Running best genome on unseen maps...\n")
+        print("Testing enabled. Running best genome on unseen maps...\n") #Only will show the # of maps labeled in "NUM_TESTING_CONFIGS", have to manually change to visualize more than 1 map atm. 
         test_map_configs = generate_n_map_configs(NUM_TESTING_CONFIGS)
 
         for i, test_map_config in enumerate(test_map_configs):

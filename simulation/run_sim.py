@@ -5,8 +5,10 @@ from map.grid_utils import TileType
 from simulation.movement import rank_moves_by_score
 from simulation.fitness import calculate_fitness
 from configs import NUM_AGENTS, ENTRANCE_SIZE, POST_GOAL_BUFFER_STEPS, FOLLOWER_STAGGER_INTERVAL
+from simulation.visualization import SwarmVisualizer
 
-def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> float:
+
+def run_simulation(genome, map_config: MapConfig, visualize: bool= True) -> float:
     """
     Runs a simulation for a given genome on a specified map configuration.
     Args: 
@@ -26,6 +28,10 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
     leader = Agent(AgentRole.LEADER, map_config.leader_path[0], initial_heading, genome=genome)
     map_config.update(old_position=None, agent=leader)  # Update agent_index and grid with the leader's initial position
 
+    # Initiate Visual
+    if visualize:
+        visualizer = SwarmVisualizer(map_config)
+
     # Loop until leader reaches goal plus a few extra steps
     for count in range(len(map_config.leader_path) + POST_GOAL_BUFFER_STEPS):  # Allow some extra steps to ensure followers can catch up
         # --- Update leader's attributes ---
@@ -35,6 +41,11 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
             leader.move(next_move)  # Move leader to next position
             leader.heading = (next_move[0] - old_position[0], next_move[1] - old_position[1])
             map_config.update(old_position, leader) # update agent_index and grid using the next move and leaders current position
+        
+        if visualize:
+            continue_running = visualizer.run_frame()
+            if not continue_running:
+                break
 
         leader.path.append(leader.position)
         leader.step_count += 1  # Increment step count for leader
@@ -76,7 +87,12 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
                     agent.agent_collision_count += 1
                 
                 # print(f"Leader Position: {leader.position}, Agent Position: {agent.position}, Next Move: {next_move}, Heading: {agent.heading}")
-
+    if visualize:
+        while True:
+            keep_open = visualizer.run_frame()
+            if not keep_open:
+                break
+        visualizer.close()
 
 
     fitness = calculate_fitness(followers)
