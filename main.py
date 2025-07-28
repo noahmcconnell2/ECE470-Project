@@ -86,13 +86,13 @@ def main():
     # Box plot of each sim metric variance in the population at select generations: start, middle, end
     plot_sim_metrics_separate_boxplots(checkpoint_stats, save=True, log_dir=log_dir)
 
-    plot_metric_vs_gene(top_genomes, gene_idx=0, metric_key="avg_leader_distance",
-                        title="Leader Distance vs. Leader Weight",
+    plot_metric_vs_gene(top_genomes, gene_idx=4, metric_key="avg_leader_distance",
+                        title="Avg Leader Distance vs. Leader Distance Weight",
                         x_label="Leader Weight", y_label="Avg Leader Distance",
                         save=True, log_dir=log_dir)
 
-    plot_metric_vs_gene(top_genomes, gene_idx=1, metric_key="avg_path_distance",
-                        title="Path Error vs. Path Weight",
+    plot_metric_vs_gene(top_genomes, gene_idx=3, metric_key="avg_path_distance",
+                        title="Avg Distance to Path vs. Path Distance Weight",
                         x_label="Path Weight", y_label="Avg Path Distance",
                         save=True, log_dir=log_dir)
 
@@ -101,8 +101,8 @@ def main():
                         x_label="Obstacle Avoidance Weight", y_label="Avg Obstacle Collisions",
                         save=True, log_dir=log_dir)
 
-    plot_metric_vs_gene(top_genomes, gene_idx=3, metric_key="avg_agent_collisions",
-                        title="Agent Collisions vs. Separation Weight",
+    plot_metric_vs_gene(top_genomes, gene_idx=1, metric_key="avg_agent_collisions",
+                        title="Avg Agent Collisions vs. Separation Weight",
                         x_label="Separation Weight", y_label="Avg Agent Collisions",
                         save=True, log_dir=log_dir)
     
