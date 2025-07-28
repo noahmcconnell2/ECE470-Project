@@ -5,7 +5,7 @@ import numpy as np
 # ===============================
 # Train/Test Configurations
 # ===============================
-NUM_TRAINING_CONFIGS = 5
+NUM_TRAINING_CONFIGS = 2
 NUM_TESTING_CONFIGS = 1
 
 # ===============================
@@ -36,8 +36,8 @@ FOLLOWER_STAGGER_INTERVAL = 2  # Only spawn a new follower every 2 ticks
 # ===============================
 # Genetic Algorithm Settings
 # ===============================
-GA_POPULATION_SIZE = 300
-GA_GENERATIONS = 60
+GA_POPULATION_SIZE = 80
+GA_GENERATIONS = 30
 GENOME_RANGE = (0.0, 5.0)
 NUM_ELITES = 1
 TOURNAMENT_GROUP_SIZE = 3

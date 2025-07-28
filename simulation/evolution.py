@@ -70,63 +70,69 @@ def run_genetic_algorithm(map_configs: list,
     for gen in range(generations):
         pre_var_best = tools.selBest(population, k=1)[0]
 
-        # Variation
+        # === VARIATION ===
         offspring = algorithms.varAnd(population, toolbox, cxpb=0.5, mutpb=0.2)
 
-        # Evaluate new individuals
+        # === EVALUATE new offspring ===
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         results = toolbox.map(toolbox.evaluate, invalid_ind)
         for ind, (fit, summary) in zip(invalid_ind, results):
             ind.fitness.values = (fit,)
             ind.stats = summary
 
-        # Select elites from current population
+        # === ELITISM: keep top N elites from previous generation ===
         elites = tools.selBest(population, k=num_elites)
 
-        # Compare current mean fitness with best seen so far (after final population formed)
+        # === STAGNATION TRACKING ===
         if mean_fitnesses and mean_fitnesses[-1] >= best_so_far - EPSILON:
             no_improvement_counter += 1
         else:
             best_so_far = mean_fitnesses[-1] if mean_fitnesses else float('inf')
             no_improvement_counter = 0
 
-        # Scale k based on stagnation
+        # === RANDOM INJECTION (scaled by stagnation) ===
         k = min(K_RANDOMS + no_improvement_counter * 2, K_MAX)
 
-        # Inject k random genomes
+        # === Create and evaluate k random genomes ===
         random_genomes = [toolbox.genome() for _ in range(k)]
         results = toolbox.map(toolbox.evaluate, random_genomes)
         for ind, (fit, summary) in zip(random_genomes, results):
             ind.fitness.values = (fit,)
             ind.stats = summary
 
-        # Replace k worst individuals in offspring
+        # === Replace k worst individuals in offspring with random genomes ===
+        k = min(k, len(offspring) - 1) if len(offspring) > 1 else 0
         offspring_sorted = sorted(offspring, key=lambda ind: ind.fitness.values[0], reverse=True)
-        offspring = offspring_sorted[:-k] + random_genomes
+        preserved = offspring_sorted[:-k] if k > 0 else offspring_sorted
+        offspring = preserved + random_genomes
 
-        # Select rest from offspring
-        rest = toolbox.select(offspring, k=population_size - num_elites)
+        # === TOURNAMENT SELECTION: Fill remainder of population excluding elites ===
+        available = len(offspring)
+        needed = population_size - num_elites
 
-        # Combine elites and selected offspring
+        if available < needed:
+            print(f"[Warning] Only {available} offspring available, needed {needed}.")
+            needed = available  # Prevent crash if we’re short
+
+        rest = toolbox.select(offspring, k=needed)
+
+        # === POPULATION UPDATE ===
         population = elites + rest
 
-        # Log fitness of new population
+        # === TRACKING ===
         fitnesses = [ind.fitness.values[0] for ind in population]
         mean_fitnesses.append(np.mean(fitnesses))
         worst_fitnesses.append(max(fitnesses))
+        top_genomes.append(tools.selBest(population, k=1)[0])  
 
-        # Log best genome
-        post_var_best = tools.selBest(population, k=1)[0]
-        top_genomes.append(post_var_best)
-
-        # Optional visualization
+        # === VISUALIZATION ===
         visualize_at_generation(gen, population, map_configs)
 
-        # Log genome stats at checkpoints
+        # === LOG CHECKPOINT DATA ===
         for tag, gnum in checkpoint_tags.items():
             if gen == gnum:
                 log_checkpoint_stats(tag, population, checkpoint_stats, checkpoint_populations)
-                    
+
 
     pool.close()
     pool.join()
