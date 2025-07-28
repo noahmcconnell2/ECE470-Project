@@ -31,6 +31,15 @@ from simulation.run_sim import run_simulation
 from simulation.evolution import run_genetic_algorithm
 import time
 from configs import (NUM_TRAINING_CONFIGS, NUM_TESTING_CONFIGS, ENABLE_TESTING)
+from pathlib import Path
+from datetime import datetime
+from simulation.plotting import (
+    plot_fitness_convergence_band,
+    plot_gene_evolution,
+    plot_checkpoint_population_gene_boxplots,
+    plot_sim_metrics_separate_boxplots,
+    plot_metric_vs_gene
+)
 
 
 def main():
@@ -41,17 +50,64 @@ def main():
     # Find best genome using the genetic algorithm
     print("Starting genetic algorithm evolution...\n")
     start_GA = time.time()
-    best_genome = run_genetic_algorithm(training_map_configs)
+    top_genomes, checkpoint_stats, mean_fitnesses, worst_fitnesses, checkpoint_populations = run_genetic_algorithm(training_map_configs)
     end_GA = time.time()
 
+    # Create timestamped log directory
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    log_dir = Path("logs") / timestamp
+    log_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Best genome found: {best_genome}")
+    best_genome = top_genomes[-1]
     print(f"Best genome fitness: {best_genome.fitness.values[0]}")
     print(f"Time taken for evolution: {end_GA - start_GA:.2f} seconds\n")
     print(f"Done with evolution!")
 
+    ## ----------- Plots ----------------
+    # Plot gene evolution
+    plot_gene_evolution(top_genomes, save=True, log_dir=log_dir)
+
+    # Plot fitness convergence band -> save in logs/<timestamp>/fitness_convergence_band
+    plot_fitness_convergence_band(top_genomes, mean_fitnesses, worst_fitnesses, save=True, log_dir=log_dir)
+
+    # Box plot of gene variance in a population at select generations: start, middle, end
+    top_genomes_dict = {
+        "start": top_genomes[0],
+        "mid": top_genomes[len(top_genomes) // 2],
+        "end": top_genomes[-1],
+    }
+    plot_checkpoint_population_gene_boxplots(
+        checkpoint_populations=checkpoint_populations,
+        top_genomes=top_genomes_dict,
+        save=True,
+        log_dir=log_dir
+    )
+
+    # Box plot of each sim metric variance in the population at select generations: start, middle, end
+    plot_sim_metrics_separate_boxplots(checkpoint_stats, save=True, log_dir=log_dir)
+
+    plot_metric_vs_gene(top_genomes, gene_idx=4, metric_key="avg_leader_distance",
+                        title="Avg Leader Distance vs. Leader Distance Weight",
+                        x_label="Leader Weight", y_label="Avg Leader Distance",
+                        save=True, log_dir=log_dir)
+
+    plot_metric_vs_gene(top_genomes, gene_idx=3, metric_key="avg_path_distance",
+                        title="Avg Distance to Path vs. Path Distance Weight",
+                        x_label="Path Weight", y_label="Avg Path Distance",
+                        save=True, log_dir=log_dir)
+
+    plot_metric_vs_gene(top_genomes, gene_idx=2, metric_key="avg_obstacle_collisions",
+                        title="Obstacle Collisions vs. Obstacle Weight",
+                        x_label="Obstacle Avoidance Weight", y_label="Avg Obstacle Collisions",
+                        save=True, log_dir=log_dir)
+
+    plot_metric_vs_gene(top_genomes, gene_idx=1, metric_key="avg_agent_collisions",
+                        title="Avg Agent Collisions vs. Separation Weight",
+                        x_label="Separation Weight", y_label="Avg Agent Collisions",
+                        save=True, log_dir=log_dir)
+    
     # --- Training Summary ---
-    print("\n--- Training Summary ---")
+    print("\n--- Top Genome Training Summary ---")
     best_stats = [run_simulation(best_genome, mc, visualize=False)[1] for mc in training_map_configs]
     for i, stat in enumerate(best_stats):
         print(f"\nMap {i+1}: {stat['map_config']}")

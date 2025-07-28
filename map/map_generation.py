@@ -76,16 +76,20 @@ def a_star(grid: np.ndarray, start: tuple[int,int], goal: tuple[int,int]) -> lis
             continue
         visited.add(current)
 
-        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1),
-                       (1,-1),(-1, -1), (-1, 1), (1, 1)]:
-            ny, nx = current[0] + dy, current[1] + dx
-            if 0 <= ny < h and 0 <= nx < w and grid[ny][nx] == 0:
-                next_node = (ny, nx)
+        for dx, dy in [(1, 0), (0, 1), (-1, 0), (0, -1), 
+                       (1, 1), (-1, 1), (-1, -1), (1, -1)]:
+            nx, ny = current[0] + dx, current[1] + dy
+            if 0 <= nx < w and 0 <= ny < h and grid[ny][nx] == TileType.EMPTY:
+                next_node = (nx, ny)
                 heapq.heappush(open_set, (g + 1 + heuristic(next_node, goal), g + 1, next_node, path + [next_node]))
 
     return []
 
 def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) -> GridWrapper:
+    """
+    Populates grid with a certain percentage of obstacles
+    grid_dim = (width, height)
+    """
     width, height = grid_dim
     total_cells = width * height
     num_obstacles = int(total_cells * percent_obstacles)
@@ -160,8 +164,8 @@ def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
         x, y = queue.popleft()
         current_distance = distance_map[y, x]
 
-        for dx, dy in [(-1,1), (-1, 0), (-1, -1), (1, 0), 
-                       (0, -1), (1, 1), (-1, 1), (0, 1)]: # check the four adjacent neighbors of the current grid cell
+        for dx, dy in [(1, 0), (0, 1), (-1, 0), (0, -1), 
+                       (1, 1), (-1, 1), (-1, -1), (1, -1)]: # check the four adjacent neighbors of the current grid cell
             nx, ny = x + dx, y + dy
             if 0 <= nx < width and 0 <= ny < height:
                 if distance_map[ny, nx] == -1:
