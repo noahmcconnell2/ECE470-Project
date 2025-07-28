@@ -44,7 +44,16 @@ import numpy as np
 from agent.agent import Agent
 from typing import List, Tuple
 from map.map_structures import MapConfig
+from enum import IntEnum
 from configs import ISOLATION_PENALTY, MAX_DISTANCE, SEDENTARY_PENALTY
+
+class GeneIndex(IntEnum):
+    COHESION = 0
+    SEPARATION = 1
+    AVOIDANCE = 2
+    PATH_FOLLOWING = 3
+    LEADER_DISTANCE = 4
+    ALIGNMENT = 5
 
 
 def rank_moves_by_score(map_config, agent, leader) -> List[Tuple[float, Tuple[int, int]]]:
