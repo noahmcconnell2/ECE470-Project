@@ -111,3 +111,12 @@ class MapConfig:
                     entrance.append((x, fy))
 
         return entrance
+    
+
+    def reset_agents(self):
+        """Remove all agents from the map (grid and agent index)."""
+        positions = list(self.agent_index.keys())
+        for pos in positions:
+            if self.grid.get(pos) == TileType.AGENT:
+                self.grid.set(pos, TileType.EMPTY)
+        self.agent_index.clear()

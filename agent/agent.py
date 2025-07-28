@@ -15,6 +15,8 @@ class Agent:
     genome: List[float]  # Genetic representation of the agent's behavior or traits
     perception_range: int = PERCEPTION_RANGE
     path: List[tuple[int, int]] = field(default_factory=list)  # Path taken by the agent during the simulation
+    osc_penalty: float = 0.0
+    complete: bool = False
 
     # Metrics for fitness evaluation
     step_count: int = 0  # Number of steps taken by the agent
