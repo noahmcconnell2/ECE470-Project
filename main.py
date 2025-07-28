@@ -42,12 +42,30 @@ from simulation.plotting import (
 )
 
 
-def main():
+def print_simulation_summary(summary: dict, map_index: int):
+    print(f"\nMap {map_index + 1}: {summary['map_config']}")
+    print(f"  → Fitness: {float(summary['fitness']):.4f}")
+    print(f"  → Num Followers: {summary['num_followers']}")
+    print(f"  → Leader Path: {summary['leader_path']}")
+    
+    for j, agent in enumerate(summary['agents']):
+        print(f"    Agent {j + 1}:")
+        print(f"      steps: {agent['step_count']}")
+        print(f"      obst. collisions: {agent['obstacle_collision_count']}")
+        print(f"      agent collisions: {agent['agent_collision_count']}")
+        print(f"      path_dist: {float(agent['path_distance_sum']):.1f}")
+        print(f"      leader_dist: {float(agent['leader_distance_sum']):.1f}")
+        print(f"      path: {agent['path']}")
 
-    # Generate 5 map configurations
+
+
+
+
+def main():
+    # Generate training maps
     training_map_configs = generate_n_map_configs(NUM_TRAINING_CONFIGS)
 
-    # Find best genome using the genetic algorithm
+    # Evolve genome
     print("Starting genetic algorithm evolution...\n")
     start_GA = time.time()
     top_genomes, checkpoint_stats, mean_fitnesses, worst_fitnesses, checkpoint_populations = run_genetic_algorithm(training_map_configs)
@@ -57,8 +75,8 @@ def main():
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_dir = Path("logs") / timestamp
     log_dir.mkdir(parents=True, exist_ok=True)
-
     best_genome = top_genomes[-1]
+    print(f"Best genome found: {best_genome}")
     print(f"Best genome fitness: {best_genome.fitness.values[0]}")
     print(f"Time taken for evolution: {end_GA - start_GA:.2f} seconds\n")
     print(f"Done with evolution!")
@@ -106,37 +124,24 @@ def main():
                         x_label="Separation Weight", y_label="Avg Agent Collisions",
                         save=True, log_dir=log_dir)
     
+
     # --- Training Summary ---
     print("\n--- Top Genome Training Summary ---")
-    best_stats = [run_simulation(best_genome, mc, visualize=False)[1] for mc in training_map_configs]
+    best_stats = [run_simulation(best_genome, mc, visualize=True)[1] for mc in training_map_configs]
     for i, stat in enumerate(best_stats):
-        print(f"\nMap {i+1}: {stat['map_config']}")
-        print(f"  → Fitness: {float(stat['fitness']):.4f}")
-        print(f"  → Num Followers: {stat['num_followers']}")
-        print(f"  → Leader Path: {stat['leader_path']}")
+        print_simulation_summary(stat, i)
 
-        for j, agent in enumerate(stat['agents']):
-            print(f"    Agent {j+1}:")
-            print(f"      steps: {agent['step_count']}")
-            print(f"      obst. collisions: {agent['obstacle_collision_count']}")
-            print(f"      agent collisions: {agent['agent_collision_count']}")
-            print(f"      path_dist: {float(agent['path_distance_sum']):.1f}")
-            print(f"      leader_dist: {float(agent['leader_distance_sum']):.1f}")
-            print(f"      path: {agent['path']}")
-
-
-    # --- Testing Section (feature flag) --- 
+    # --- Testing Section (feature flag) ---
     if ENABLE_TESTING:
-        print("Testing enabled. Running best genome on unseen maps...\n")
+        print("\nTesting enabled. Running best genome on unseen maps...\n")
         test_map_configs = generate_n_map_configs(NUM_TESTING_CONFIGS)
-
         for i, test_map_config in enumerate(test_map_configs):
-            print(f"Test Map {i+1}:")
             fitness, summary = run_simulation(best_genome, test_map_config, visualize=True)
+            print_simulation_summary(summary, i)
             print(f"   Test fitness: {fitness:.4f}")
-    
+
 
 if __name__ == "__main__":
     import multiprocessing
-    multiprocessing.set_start_method("spawn", force=True)  # Safest for multiprocessing
+    multiprocessing.set_start_method("spawn", force=True)
     main()

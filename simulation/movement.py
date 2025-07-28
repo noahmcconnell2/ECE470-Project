@@ -75,6 +75,9 @@ def rank_moves_by_score(map_config, agent, leader) -> List[Tuple[float, Tuple[in
             alignment    * agent.genome[5]
         )
 
+        if len(agent.path) >= 2 and move == agent.path[-2]:
+            total_score += agent.osc_penalty
+
         if move == agent.position:
             total_score += SEDENTARY_PENALTY
 
@@ -167,11 +170,10 @@ def calculate_separation(next_move: Tuple[int, int], nearest_agent: Agent) -> fl
         return 1.0  # Full penalty when isolated 
     
     distance = np.sqrt((nearest_agent.position[0] - next_move[0]) ** 2 + (nearest_agent.position[1] - next_move[1]) ** 2)
-    if distance == 0:
-        return 1.0
     normalized_distance = normalize_feature(distance, ISOLATION_PENALTY)
 
-    return 1/ normalized_distance 
+    # Smooth penalty: close = high penalty, far = low penalty
+    return 1 - np.log1p(normalized_distance) / np.log1p(1) 
 
 
 def calculate_obstacle_avoidance(next_move: Tuple[int, int], map_config: MapConfig) -> float:
