@@ -34,6 +34,10 @@ import time
 from configs import (NUM_TRAINING_CONFIGS, NUM_TESTING_CONFIGS, ENABLE_TESTING)
 from pathlib import Path
 from datetime import datetime
+import shutil
+import contextlib
+import sys
+import winsound
 from simulation.plotting import (
     plot_fitness_convergence_band,
     plot_gene_evolution,
@@ -45,9 +49,9 @@ from simulation.plotting import (
 
 def print_simulation_summary(summary: dict, map_index: int):
     print(f"\nMap {map_index + 1}: {summary['map_config']}")
-    print(f"  → Fitness: {float(summary['fitness']):.4f}")
-    print(f"  → Num Followers: {summary['num_followers']}")
-    print(f"  → Leader Path: {summary['leader_path']}")
+    print(f"  -> Fitness: {float(summary['fitness']):.4f}")
+    print(f"  -> Num Followers: {summary['num_followers']}")
+    print(f"  -> Leader Path: {summary['leader_path']}")
     
     for j, agent in enumerate(summary['agents']):
         print(f"    Agent {j + 1}:")
@@ -63,85 +67,98 @@ def main():
     # Generate training maps
     training_map_configs = generate_n_map_configs(NUM_TRAINING_CONFIGS)
 
-    # Evolve genome
-    print("Starting genetic algorithm evolution...\n")
-    start_GA = time.time()
-    top_genomes, checkpoint_stats, mean_fitnesses, worst_fitnesses, checkpoint_populations = run_genetic_algorithm(training_map_configs)
-    end_GA = time.time()
+
 
     # Create timestamped log directory
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_dir = Path("logs") / timestamp
     log_dir.mkdir(parents=True, exist_ok=True)
-    best_genome = top_genomes[-1]
-    print(f"Best genome found: {best_genome}")
-    print(f"Best genome fitness: {best_genome.fitness.values[0]}")
-    print(f"Time taken for evolution: {end_GA - start_GA:.2f} seconds\n")
-    print(f"Done with evolution!")
 
-    ## ----------- Plots ----------------
-    # Plot gene evolution
-    plot_gene_evolution(top_genomes, save=True, log_dir=log_dir)
+    # Save a copy of the configs.py file
+    shutil.copyfile("configs.py", log_dir / "configs.txt")
 
-    # Plot fitness convergence band -> save in logs/<timestamp>/fitness_convergence_band
-    plot_fitness_convergence_band(top_genomes, mean_fitnesses, worst_fitnesses, save=True, log_dir=log_dir)
 
-    # Box plot of gene variance in a population at select generations: start, middle, end
-    top_genomes_dict = {
-        "start": top_genomes[0],
-        "mid": top_genomes[len(top_genomes) // 2],
-        "end": top_genomes[-1],
-    }
-    plot_checkpoint_population_gene_boxplots(
-        checkpoint_populations=checkpoint_populations,
-        top_genomes=top_genomes_dict,
-        save=True,
-        log_dir=log_dir
-    )
+    # Create output log file
+    output_log_path = log_dir / "output.txt"
+    with open(output_log_path, "w") as f, contextlib.redirect_stdout(f):
+        # Evolve genome
+        print("Starting genetic algorithm evolution...\n")
+        start_GA = time.time()
+        top_genomes, checkpoint_stats, mean_fitnesses, worst_fitnesses, checkpoint_populations = run_genetic_algorithm(training_map_configs)
+        end_GA = time.time()
 
-    # Box plot of each sim metric variance in the population at select generations: start, middle, end
-    plot_sim_metrics_separate_boxplots(checkpoint_stats, save=True, log_dir=log_dir)
+        best_genome = top_genomes[-1]
+        print(f"Best genome found: {best_genome}")
+        print(f"Best genome fitness: {best_genome.fitness.values[0]}")
+        print(f"Time taken for evolution: {end_GA - start_GA:.2f} seconds\n")
+        print(f"Done with evolution!")
+        winsound.PlaySound("assets/714564__lilmati__balcony-view-over-la.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)
 
-    plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.LEADER_DISTANCE, metric_key="avg_leader_distance",
-                        title="Avg Leader Distance vs. Leader Distance Weight",
-                        x_label="Leader Weight", y_label="Avg Leader Distance",
-                        save=True, log_dir=log_dir)
+        ## ----------- Plots ----------------
+        # Plot gene evolution
+        plot_gene_evolution(top_genomes, save=True, log_dir=log_dir)
 
-    plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.PATH_FOLLOWING, metric_key="avg_path_distance",
-                        title="Avg Distance to Path vs. Path Distance Weight",
-                        x_label="Path Weight", y_label="Avg Path Distance",
-                        save=True, log_dir=log_dir)
+        # Plot fitness convergence band -> save in logs/<timestamp>/fitness_convergence_band
+        plot_fitness_convergence_band(top_genomes, mean_fitnesses, worst_fitnesses, save=True, log_dir=log_dir)
 
-    plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.AVOIDANCE, metric_key="avg_obstacle_collisions",
-                        title="Obstacle Collisions vs. Obstacle Weight",
-                        x_label="Obstacle Avoidance Weight", y_label="Avg Obstacle Collisions",
-                        save=True, log_dir=log_dir)
+        # Box plot of gene variance in a population at select generations: start, middle, end
+        top_genomes_dict = {
+            "start": top_genomes[0],
+            "mid": top_genomes[len(top_genomes) // 2],
+            "end": top_genomes[-1],
+        }
+        plot_checkpoint_population_gene_boxplots(
+            checkpoint_populations=checkpoint_populations,
+            top_genomes=top_genomes_dict,
+            save=True,
+            log_dir=log_dir
+        )
 
-    plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.SEPARATION, metric_key="avg_agent_collisions",
-                        title="Avg Agent Collisions vs. Separation Weight",
-                        x_label="Separation Weight", y_label="Avg Agent Collisions",
-                        save=True, log_dir=log_dir)
-    
-    plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.PATH_FOLLOWING, metric_key="fitness",
-                        title="Avg fitness vs. Path Following Weight",
-                        x_label="Path Following Weight", y_label="Avg Fitness",
-                        save=True, log_dir=log_dir)
-    
+        # Box plot of each sim metric variance in the population at select generations: start, middle, end
+        plot_sim_metrics_separate_boxplots(checkpoint_stats, save=True, log_dir=log_dir)
 
-    # --- Training Summary ---
-    print("\n--- Top Genome Training Summary ---")
-    best_stats = [run_simulation(best_genome, mc, visualize=True)[1] for mc in training_map_configs]
-    for i, stat in enumerate(best_stats):
-        print_simulation_summary(stat, i)
+        plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.LEADER_DISTANCE, metric_key="avg_leader_distance",
+                            title="Avg Leader Distance vs. Leader Distance Weight",
+                            x_label="Leader Weight", y_label="Avg Leader Distance",
+                            save=True, log_dir=log_dir)
 
-    # --- Testing Section (feature flag) ---
-    if ENABLE_TESTING:
-        print("\nTesting enabled. Running best genome on unseen maps...\n")
-        test_map_configs = generate_n_map_configs(NUM_TESTING_CONFIGS)
-        for i, test_map_config in enumerate(test_map_configs):
-            fitness, summary = run_simulation(best_genome, test_map_config, visualize=True)
-            print_simulation_summary(summary, i)
-            print(f"   Test fitness: {fitness:.4f}")
+        plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.PATH_FOLLOWING, metric_key="avg_path_distance",
+                            title="Avg Distance to Path vs. Path Distance Weight",
+                            x_label="Path Weight", y_label="Avg Path Distance",
+                            save=True, log_dir=log_dir)
+
+        plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.AVOIDANCE, metric_key="avg_obstacle_collisions",
+                            title="Obstacle Collisions vs. Obstacle Weight",
+                            x_label="Obstacle Avoidance Weight", y_label="Avg Obstacle Collisions",
+                            save=True, log_dir=log_dir)
+
+        plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.SEPARATION, metric_key="avg_agent_collisions",
+                            title="Avg Agent Collisions vs. Separation Weight",
+                            x_label="Separation Weight", y_label="Avg Agent Collisions",
+                            save=True, log_dir=log_dir)
+        
+        plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.PATH_FOLLOWING, metric_key="fitness",
+                            title="Avg fitness vs. Path Following Weight",
+                            x_label="Path Following Weight", y_label="Avg Fitness",
+                            save=True, log_dir=log_dir)
+        
+
+        # --- Training Summary ---
+        print("\n--- Top Genome Training Summary ---")
+        for i, mc in enumerate(training_map_configs):
+            video_out_path = log_dir / f"training_map_{i+1}_swarm.mp4"
+            _, stat = run_simulation(best_genome, mc, visualize=True, video_path=video_out_path)
+            print_simulation_summary(stat, i)
+
+        # --- Testing Section (feature flag) ---
+        if ENABLE_TESTING:
+            print("\nTesting enabled. Running best genome on unseen maps...\n")
+            test_map_configs = generate_n_map_configs(NUM_TESTING_CONFIGS)
+            for i, test_map_config in enumerate(test_map_configs):
+                video_out_path = log_dir / f"test_map_{i+1}_swarm.mp4"
+                fitness, summary = run_simulation(best_genome, test_map_config, visualize=True, video_path=video_out_path)
+                print_simulation_summary(summary, i)
+                print(f"   Test fitness: {fitness:.4f}")
 
 
 if __name__ == "__main__":

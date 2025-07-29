@@ -4,6 +4,9 @@ import numpy as np
 from map.map_structures import MapConfig
 from agent.agent import Agent, AgentRole
 from map.grid_utils import TileType
+from utils.imageio_recorder import ImageioVideoWriter
+from configs import RECORD_VIDEO
+from pathlib import Path
 
 
 # Colour definitions (R, G, B)
@@ -18,7 +21,7 @@ COLOURS = {
 
 
 class SwarmVisualizer:
-    def __init__(self, map_config: MapConfig, tile_size):
+    def __init__(self, map_config: MapConfig, tile_size, record: bool = False, save_path: Path = None):
         pygame.init()
 
         self.map_config = map_config
@@ -32,6 +35,9 @@ class SwarmVisualizer:
         self.screen = pygame.display.set_mode((self.window_width, self.window_height), pygame.RESIZABLE)
         pygame.display.set_caption("Swarm Simulation")
         self.clock = pygame.time.Clock()
+
+        self.record = record and RECORD_VIDEO and save_path is not None
+        self.recorder = ImageioVideoWriter(str(save_path), fps=7) if self.record else None
 
     def draw_overlay(self):
         instructions = "R = Restart   |   Q = Quit   |   + / - = Zoom"
@@ -80,6 +86,9 @@ class SwarmVisualizer:
         self.draw_overlay()
         pygame.display.flip()
 
+        if self.recorder:
+            self.recorder.capture(self.screen)
+
     def run_frame(self, fps=7) -> bool:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -101,6 +110,8 @@ class SwarmVisualizer:
         return True
 
     def close(self):
+        if self.recorder:
+            self.recorder.close()
         pygame.display.quit()
         pygame.quit()
 

@@ -5,10 +5,11 @@ from map.grid_utils import TileType
 from simulation.movement import rank_moves_by_score
 from simulation.fitness import calculate_fitness
 from copy import deepcopy
+from pathlib import Path
 from configs import NUM_AGENTS, ENTRANCE_SIZE, POST_GOAL_BUFFER_STEPS, FOLLOWER_STAGGER_INTERVAL, TILE_SIZE, MAX_OSC_PENALTY
 
 
-def run_simulation(genome, map_config: MapConfig, visualize: bool= True, tile_size: int = TILE_SIZE) -> float:
+def run_simulation(genome, map_config: MapConfig, visualize: bool= True, tile_size: int = TILE_SIZE, video_path: Path = None) -> float:
     """
     Runs a simulation for a given genome on a specified map configuration.
     Args: 
@@ -31,7 +32,7 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= True, tile_si
     # Initiate Visual
     if visualize:
         from simulation.visualization import SwarmVisualizer
-        visualizer = SwarmVisualizer(map_config, tile_size=tile_size)
+        visualizer = SwarmVisualizer(map_config, tile_size=tile_size, record=(video_path is not None), save_path=video_path)
 
     # Loop until leader reaches goal plus a few extra steps
     for count in range(len(map_config.leader_path) + POST_GOAL_BUFFER_STEPS):  # Allow some extra steps to ensure followers can catch up

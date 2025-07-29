@@ -1,5 +1,9 @@
+# Ignore everything by default
 *
-!*.py
-!*.README.md
-!*.gitignore
 
+# Allow specific file types recursively
+!**/*.py
+!**/*.README.md
+!**/*.gitignore
+!**/*.wav
+!**/*.gitkeep

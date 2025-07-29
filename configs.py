@@ -5,7 +5,7 @@ import numpy as np
 # ===============================
 # Train/Test Configurations
 # ===============================
-NUM_TRAINING_CONFIGS = 1    # Number of training maps used for fitness evaluation
+NUM_TRAINING_CONFIGS = 5    # Number of training maps used for fitness evaluation
 NUM_TESTING_CONFIGS = 3     # Number of testing maps used for post-training evaluation
 
 # ===============================
@@ -19,7 +19,7 @@ MIN_LEADER_PATH_DISTANCE = int(GRID_DIM[0] * 0.5)   # Minimum path length the le
 # ===============================
 # Agent Settings
 # ===============================
-NUM_AGENTS = 5          # Number of follower agents spawned per simulation
+NUM_AGENTS = 8          # Number of follower agents spawned per simulation
 PERCEPTION_RANGE = 5    # Agents can sense other entities within this Manhattan radius
 
 
@@ -38,17 +38,17 @@ FOLLOWER_STAGGER_INTERVAL = 1  # Interval (in ticks) between spawning successive
 # ===============================
 # Genetic Algorithm Settings
 # ===============================
-GA_POPULATION_SIZE = 100     # Number of genomes in the population per generation
-GA_GENERATIONS = 35          # Total number of generations for evolution
+GA_POPULATION_SIZE = 200     # Number of genomes in the population per generation
+GA_GENERATIONS = 60          # Total number of generations for evolution
 GENOME_RANGE = (0.0, 5.0)    # Allowed gene weight values (inclusive)
 NUM_ELITES = 2               # Number of top genomes preserved without modification in next generation
 TOURNAMENT_GROUP_SIZE = 3    # Size of tournament selection pool
 RANDOM_SEED = 42             # Seed for reproducibility
 
 # --- Cross-over and mutation parameters ---
-ETA = 8        # SBX crossover parameter; controls spread of offspring (smaller = more exploratory)
+ETA = 6        # SBX crossover parameter; controls spread of offspring (smaller = more exploratory)
 MU = 0.0       # Mean for Gaussian mutation; centered around current gene value
-SIGMA = 0.25    # Std dev for Gaussian mutation; controls magnitude of mutation
+SIGMA = 0.2    # Std dev for Gaussian mutation; controls magnitude of mutation
 INDPB = 0.3    # Probability of mutating each individual gene within a genome
 CXPB = 0.6     # Probability that an offspring is generated via crossover
 MUTPB = 0.4    # Probability that an offspring is mutated (may override crossover child)
@@ -58,8 +58,9 @@ K_RANDOMS = int(0.01 * GA_POPULATION_SIZE)      # Baseline number of random geno
 K_MAX = int(0.15 * GA_POPULATION_SIZE)           # Max number of random genomes injected due to stagnation
 EPSILON = 1e-2                                  # Minimum required improvement to reset stagnation counter
 
+RECORD_VIDEO = True             # Flag to enable pygame animation recordings
 ENABLE_VISUALIZATION = False    # Flag to enable Pygame animation of individual evaluations
-TILE_SIZE = 20                  # Pixel size of grid cells when visualizing
+TILE_SIZE = 16                  # Pixel size of grid cells when visualizing
 
 VISUALIZATION_PLAN = {
     # generation: [(individual_rank, map_index), ...]
@@ -92,4 +93,4 @@ MAX_FITNESS = 1e6  # Arbitrary large value for no followers
 # ===============================
 # Testing Settings
 # ===============================
-ENABLE_TESTING = False
+ENABLE_TESTING = True
