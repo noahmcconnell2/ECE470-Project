@@ -90,6 +90,8 @@ def main():
         best_genome = top_genomes[-1]
         print(f"Best genome found: {best_genome}")
         print(f"Best genome fitness: {best_genome.fitness.values[0]}")
+        print(f"Worst genome in last generation: {top_genomes[0]}")
+        print(f"Worst genome in last generation fitness: {top_genomes[0].fitness.values[0]}")
         print(f"Time taken for evolution: {end_GA - start_GA:.2f} seconds\n")
         print(f"Done with evolution!")
         winsound.PlaySound("assets/714564__lilmati__balcony-view-over-la.wav", winsound.SND_FILENAME | winsound.SND_ASYNC)

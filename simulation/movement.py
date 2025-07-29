@@ -41,7 +41,7 @@ Lower scores are preferred, representing more desirable moves.
 """
 
 import numpy as np
-from agent.agent import Agent
+from agent.agent import Agent, AgentRole
 from typing import List, Tuple
 from map.map_structures import MapConfig
 from enum import IntEnum
@@ -84,10 +84,17 @@ def rank_moves_by_score(map_config, agent, leader) -> List[Tuple[float, Tuple[in
             alignment    * agent.genome[5]
         )
 
+        # Check if leader is in perception zone
+        leader_in_view = any(a.role == AgentRole.LEADER for a in nearby_agents)
+
+        if not leader_in_view:
+            total_score += ISOLATION_PENALTY
+
         if len(agent.path) >= 2 and move == agent.path[-2]:
             total_score += agent.osc_penalty
 
-        if move == agent.position:
+        # Remove penalty when within 3x3 grid plus buffer from goal
+        if move == agent.position and np.linalg.norm(np.array(map_config.leader_path[-1]) - np.array(move)) > np.sqrt(2) + 1: 
             total_score += SEDENTARY_PENALTY
 
         if move in entrance_positions:

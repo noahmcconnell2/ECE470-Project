@@ -76,7 +76,7 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= True, tile_si
 
             ranked_moves = rank_moves_by_score(map_config, agent, leader)
             for score, next_move in ranked_moves:
-                if (next_move == agent.position or map_config.grid.get(next_move) == TileType.EMPTY) and next_move not in map_config.agent_index:
+                if next_move == agent.position or (map_config.grid.get(next_move) == TileType.EMPTY and next_move not in map_config.agent_index):
                     old_position = agent.position
                     agent.move(next_move)
                     agent.path.append(agent.position)

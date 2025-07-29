@@ -94,7 +94,7 @@ def run_genetic_algorithm(map_configs: list,
 
             # === HYBRID INJECTION STRATEGY ===
             # 1. Linearly decaying injection amount over generations
-            scheduled_k = int(K_MAX * (1 - gen / generations))
+            scheduled_k = int(K_MAX * (1 - gen / generations)**1.2)
 
             # 2. Stagnation-triggered fallback
             stagnation_k = K_RANDOMS + no_improvement_counter
