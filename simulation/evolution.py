@@ -5,7 +5,7 @@ from deap import base, creator, tools, algorithms
 from functools import partial
 from configs import (GA_POPULATION_SIZE, GA_GENERATIONS, GENOME_RANGE, 
                     NUM_ELITES, TOURNAMENT_GROUP_SIZE, RANDOM_SEED, 
-                    ETA, MU, SIGMA, INDPB, K_RANDOMS, K_MAX, EPSILON,
+                    ETA, MU, SIGMA, INDPB, K_RANDOMS, K_MAX, EPSILON, CXPB, MUTPB, INTRODUCE_RANDOMS,
                     VISUALIZATION_PLAN, ENABLE_VISUALIZATION) 
 import multiprocessing
 
@@ -71,7 +71,7 @@ def run_genetic_algorithm(map_configs: list,
         pre_var_best = tools.selBest(population, k=1)[0]
 
         # === VARIATION ===
-        offspring = algorithms.varAnd(population, toolbox, cxpb=0.5, mutpb=0.2)
+        offspring = algorithms.varAnd(population, toolbox, cxpb=CXPB, mutpb=MUTPB)
 
         # === EVALUATE new offspring ===
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -83,28 +83,38 @@ def run_genetic_algorithm(map_configs: list,
         # === ELITISM: keep top N elites from previous generation ===
         elites = tools.selBest(population, k=num_elites)
 
-        # === STAGNATION TRACKING ===
-        if mean_fitnesses and mean_fitnesses[-1] >= best_so_far - EPSILON:
-            no_improvement_counter += 1
-        else:
-            best_so_far = mean_fitnesses[-1] if mean_fitnesses else float('inf')
-            no_improvement_counter = 0
+        
+        if INTRODUCE_RANDOMS:
+            # === STAGNATION TRACKING ===
+            # if mean_fitnesses and mean_fitnesses[-1] >= best_so_far - EPSILON:
+            #     no_improvement_counter += 1
+            # else:
+            #     best_so_far = mean_fitnesses[-1] if mean_fitnesses else float('inf')
+            #     no_improvement_counter = 0
 
-        # === RANDOM INJECTION (scaled by stagnation) ===
-        k = min(K_RANDOMS + no_improvement_counter * 2, K_MAX)
+            # === HYBRID INJECTION STRATEGY ===
+            # 1. Linearly decaying injection amount over generations
+            scheduled_k = int(K_MAX * (1 - gen / generations))
 
-        # === Create and evaluate k random genomes ===
-        random_genomes = [toolbox.genome() for _ in range(k)]
-        results = toolbox.map(toolbox.evaluate, random_genomes)
-        for ind, (fit, summary) in zip(random_genomes, results):
-            ind.fitness.values = (fit,)
-            ind.stats = summary
+            # 2. Stagnation-triggered fallback
+            stagnation_k = K_RANDOMS + no_improvement_counter
 
-        # === Replace k worst individuals in offspring with random genomes ===
-        k = min(k, len(offspring) - 1) if len(offspring) > 1 else 0
-        offspring_sorted = sorted(offspring, key=lambda ind: ind.fitness.values[0], reverse=True)
-        preserved = offspring_sorted[:-k] if k > 0 else offspring_sorted
-        offspring = preserved + random_genomes
+            # 3. Final k: max of scheduled and stagnation amounts (capped)
+            k = min(max(scheduled_k, stagnation_k), K_MAX)
+            k = max(k, K_RANDOMS)  # Enforce minimum baseline
+
+            # === Create and evaluate k random genomes ===
+            random_genomes = [toolbox.genome() for _ in range(k)]
+            results = toolbox.map(toolbox.evaluate, random_genomes)
+            for ind, (fit, summary) in zip(random_genomes, results):
+                ind.fitness.values = (fit,)
+                ind.stats = summary
+
+            # === Replace k worst individuals in offspring with random genomes ===
+            k = min(k, len(offspring) - 1) if len(offspring) > 1 else 0
+            offspring_sorted = sorted(offspring, key=lambda ind: ind.fitness.values[0], reverse=True)
+            preserved = offspring_sorted[:-k] if k > 0 else offspring_sorted
+            offspring = preserved + random_genomes
 
         # === TOURNAMENT SELECTION: Fill remainder of population excluding elites ===
         available = len(offspring)

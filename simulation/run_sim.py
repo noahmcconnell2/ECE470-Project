@@ -88,11 +88,11 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= True, tile_si
                     agent.path_distance_sum += map_config.leader_path_distance_map.get(agent.position)
 
                     if len(agent.path) >= 2 and agent.position == agent.path[-2]:
-                        agent.osc_penalty = min(agent.osc_penalty + 5, MAX_OSC_PENALTY) 
+                        agent.osc_penalty = min(agent.osc_penalty + 1, MAX_OSC_PENALTY) 
                     else:
-                        agent.osc_penalty = 0.0
+                        agent.osc_penalty = max(agent.osc_penalty -1, 0.0)
 
-                    if leader.complete and np.linalg.norm(np.array(agent.position) - np.array(leader.position)) < 1.5:
+                    if leader.complete and np.linalg.norm(np.array(agent.position) - np.array(leader.position)) < 1.4:
                         agent.complete = True
 
                     break

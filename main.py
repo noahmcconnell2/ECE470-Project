@@ -122,6 +122,11 @@ def main():
                         x_label="Separation Weight", y_label="Avg Agent Collisions",
                         save=True, log_dir=log_dir)
     
+    plot_metric_vs_gene(top_genomes, gene_idx=GeneIndex.PATH_FOLLOWING, metric_key="fitness",
+                        title="Avg fitness vs. Path Following Weight",
+                        x_label="Path Following Weight", y_label="Avg Fitness",
+                        save=True, log_dir=log_dir)
+    
 
     # --- Training Summary ---
     print("\n--- Top Genome Training Summary ---")
