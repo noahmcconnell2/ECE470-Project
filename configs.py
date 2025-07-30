@@ -5,7 +5,8 @@ import numpy as np
 # ===============================
 # Train/Test Configurations
 # ===============================
-NUM_TRAINING_CONFIGS = 2    # Number of training maps used for fitness evaluation
+EVOLUTION = False
+NUM_TRAINING_CONFIGS = 3    # Number of training maps used for fitness evaluation
 NUM_TESTING_CONFIGS = 1     # Number of testing maps used for post-training evaluation
 
 # ===============================
@@ -13,13 +14,13 @@ NUM_TESTING_CONFIGS = 1     # Number of testing maps used for post-training eval
 # ===============================
 GRID_DIM = (50, 50)         # Size of the 2D environment grid (rows, columns)
 PERCENT_OBSTACLES = 0.15    # Fraction of grid cells to fill with obstacles
-ENTRANCE_SIZE = 3           # Width of openings in obstacle funnels
+ENTRANCE_SIZE = 5           # Width of openings in obstacle funnels
 MIN_LEADER_PATH_DISTANCE = int(GRID_DIM[0] * 0.5)   # Minimum path length the leader must travel (used to prevent trivial routes)
 
 # ===============================
 # Agent Settings
 # ===============================
-NUM_AGENTS = 5          # Number of follower agents spawned per simulation
+NUM_AGENTS = 50          # Number of follower agents spawned per simulation
 PERCEPTION_RANGE = 5    # Agents can sense other entities within this Manhattan radius
 
 
@@ -31,15 +32,15 @@ ISOLATION_PENALTY = round((np.sqrt(2 * PERCEPTION_RANGE**2) / 2) + 4, 2)    # Pe
 MAX_DISTANCE = np.sqrt(GRID_DIM[0]**2 + GRID_DIM[1]**2)     # Used to normalize distances, represents the longest possible distance in the grid
 SEDENTARY_PENALTY = 0.4     # Penalty applied if agent does not move during a tick
 MAX_OSC_PENALTY = 20        # Maximum penalty for excessive oscillation (frequent back-and-forth moves)
-POST_GOAL_BUFFER_STEPS = 10  # Time buffer after leader reaches goal to let followers regroup before simulation ends
+POST_GOAL_BUFFER_STEPS = 25  # Time buffer after leader reaches goal to let followers regroup before simulation ends
 FOLLOWER_STAGGER_INTERVAL = 1  # Interval (in ticks) between spawning successive followers
 
 
 # ===============================
 # Genetic Algorithm Settings
 # ===============================
-GA_POPULATION_SIZE = 150     # Number of genomes in the population per generation
-GA_GENERATIONS = 150          # Total number of generations for evolution
+GA_POPULATION_SIZE = 100     # Number of genomes in the population per generation
+GA_GENERATIONS = 40          # Total number of generations for evolution
 GENOME_RANGE = (0.0, 5.0)    # Allowed gene weight values (inclusive)
 NUM_ELITES = 1               # Number of top genomes preserved without modification in next generation
 TOURNAMENT_GROUP_SIZE = 3    # Size of tournament selection pool
@@ -53,6 +54,7 @@ INDPB = 0.3    # Probability of mutating each individual gene within a genome
 CXPB = 0.6     # Probability that an offspring is generated via crossover
 MUTPB = 0.4    # Probability that an offspring is mutated (may override crossover child)
 
+TOP_GENOME = (0.49352261464562763, 3.7783354429176788, 1.2222925721559357e-06, 2.5095838545005735, 3.8697468401329056, 3.481150923791909)
 INTRODUCE_RANDOMS = True                       # Flag for injecting random genomes into populous
 K_RANDOMS = int(0.01 * GA_POPULATION_SIZE)      # Baseline number of random genomes injected each generation
 K_MAX = int(0.15 * GA_POPULATION_SIZE)           # Max number of random genomes injected due to stagnation
@@ -86,7 +88,7 @@ class FitnessWeights(NamedTuple):
     obstacle_collisions: float
     agent_collisions: float
 
-FITNESS_WEIGHTS = FitnessWeights(1.8, 1.0, 1.0, 1.0)
+FITNESS_WEIGHTS = FitnessWeights(3.0, 2.8, 1.5, 1.5)
 MAX_COLLISIONS = 1.0
 MAX_FITNESS = 1e6  # Arbitrary large value for no followers
 
@@ -94,3 +96,4 @@ MAX_FITNESS = 1e6  # Arbitrary large value for no followers
 # Testing Settings
 # ===============================
 ENABLE_TESTING = True
+REPEATED_TESTING = True

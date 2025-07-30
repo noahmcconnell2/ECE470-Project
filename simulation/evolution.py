@@ -3,6 +3,7 @@ import numpy as np
 from simulation.run_sim import run_simulation
 from deap import base, creator, tools, algorithms
 from functools import partial
+from typing import List
 from configs import (GA_POPULATION_SIZE, GA_GENERATIONS, GENOME_RANGE, 
                     NUM_ELITES, TOURNAMENT_GROUP_SIZE, RANDOM_SEED, 
                     ETA, MU, SIGMA, INDPB, K_RANDOMS, K_MAX, EPSILON, CXPB, MUTPB, INTRODUCE_RANDOMS,
@@ -16,6 +17,7 @@ def run_genetic_algorithm(map_configs: list,
                           num_elites: int = NUM_ELITES,
                           tournament_group_size: int = TOURNAMENT_GROUP_SIZE,
                           random_seed: int = RANDOM_SEED,
+                          previous_genomes: List[tuple] = None
                          ) -> object:
 
     random.seed(random_seed)
@@ -42,7 +44,7 @@ def run_genetic_algorithm(map_configs: list,
     toolbox.register("map", pool.map)
 
     # Initialize population and evaluate fitness - starting genomes
-    population = initialize_and_evaluate_population(toolbox, population_size)
+    population = initialize_and_evaluate_population(toolbox, population_size, previous_genomes)
 
     top_genomes = []
     mean_fitnesses = []
@@ -165,9 +167,17 @@ def log_checkpoint_stats(tag, population, checkpoint_stats, checkpoint_populatio
 
 
 
-def initialize_and_evaluate_population(toolbox, population_size):
+def initialize_and_evaluate_population(toolbox, population_size, previous_genomes=None):
     """Initializes a population and evaluates their fitness."""
     population = toolbox.population(n=population_size)
+
+    # Inject previous genomes if provided
+    if previous_genomes:
+        for i, prev in enumerate(previous_genomes):
+            genome = creator.Genome(prev)
+            population[i % population_size] = genome
+
+    # Evaluate the population        
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
     results = toolbox.map(toolbox.evaluate, invalid_ind)
     for ind, (fit, summary) in zip(invalid_ind, results):

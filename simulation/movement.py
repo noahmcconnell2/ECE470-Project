@@ -94,7 +94,7 @@ def rank_moves_by_score(map_config, agent, leader) -> List[Tuple[float, Tuple[in
             total_score += agent.osc_penalty
 
         # Remove penalty when within 3x3 grid plus buffer from goal
-        if move == agent.position and np.linalg.norm(np.array(map_config.leader_path[-1]) - np.array(move)) > np.sqrt(2) + 1: 
+        if move == agent.position and np.linalg.norm(np.array(map_config.leader_path[-1]) - np.array(move)) > np.sqrt(2) + 5: 
             total_score += SEDENTARY_PENALTY
 
         if move in entrance_positions:
@@ -236,8 +236,9 @@ def calculate_leader_distance(next_move: Tuple[int, int], leader_position: Tuple
     """
     distance = np.sqrt((leader_position[0] - next_move[0]) ** 2 + (leader_position[1] - next_move[1]) ** 2)
     normalized_distance = normalize_feature(distance, MAX_DISTANCE)
+    penalty = np.exp(normalized_distance) - 1
 
-    return normalized_distance
+    return penalty
 
 def calculate_alignment(position: Tuple[int, int], next_move: Tuple[int, int], nearby_agents: List[Agent]) -> float:
     """

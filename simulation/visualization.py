@@ -96,7 +96,7 @@ class SwarmVisualizer:
             elif event.type == pygame.KEYDOWN:
                 key = event.key
 
-                if key == pygame.K_q:
+                if key == pygame.K_q or key == pygame.K_c:
                     return "quit"
                 elif key == pygame.K_r:
                     return "restart"
