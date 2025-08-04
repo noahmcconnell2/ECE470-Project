@@ -70,7 +70,7 @@ This project explores the evolution of decentralized swarm behavior using a Gene
 
 Install dependencies using:
 ```bash
-pip install -r requirements.txt`
+pip install -r requirements.txt
 ```
 ---
 
