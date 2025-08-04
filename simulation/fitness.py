@@ -1,3 +1,12 @@
+"""
+Fitness evaluation module for swarm agents.
+
+This module defines the function used to compute the fitness of follower agents
+based on their stepwise performance metrics during simulation. Metrics are normalized
+and combined via a weighted sum to reflect desired swarm behavior traits.
+"""
+
+
 import numpy as np
 from agent.agent import Agent
 from typing import List
@@ -6,14 +15,24 @@ from configs import FitnessWeights, FITNESS_WEIGHTS, MAX_DISTANCE, MAX_COLLISION
 
 def calculate_fitness(followers: list[Agent], weights: FitnessWeights = FITNESS_WEIGHTS) -> float:
     """
-    Calculate the fitness scores for a list of agents based on their metrics and given weights.
-    
+    Calculate the average fitness score for a list of follower agents.
+
+    The fitness function is a weighted sum of four normalized performance metrics:
+    - Average distance to the leader
+    - Average distance to the leader's path
+    - Obstacle collision rate
+    - Agent collision rate
+
+    All metrics are normalized to a [0, 1] range based on known maximums.
+    A lower score indicates better performance.
+
     Args:
-        followers: List of Agent objects representing the followers.
-        weights: List of weights corresponding to each metric.
-        
+        followers (List[Agent]): List of follower agents with simulation metrics.
+        weights (FitnessWeights): Weights assigned to each of the four metrics.
+
     Returns:
-        float: The average fitness score across all agents.
+        float: Average fitness score across all agents. If no agents are present,
+               returns MAX_FITNESS as a penalty.
     """
     total_fitness = 0.0
 

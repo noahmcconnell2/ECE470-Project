@@ -1,28 +1,37 @@
 """
-Main entry point for 'Swarm Behaviour Evolution Using Genetic Algorithms (GA)'
+Main entry point for: Swarm Behaviour Evolution Using Genetic Algorithms (GA)
 
-This script coordinates the overall pipeline:
-- Generates map configurations with obstacle layouts and leader paths
-- Evolves agent behavior using a genetic algorithm to optimize swarm performance
-- Tests the best-evolved genome on unseen environments
+This module orchestrates the full evolutionary pipeline:
+- Generates randomized obstacle-filled map configurations with valid leader paths.
+- Evolves decentralized agent behaviors via a genetic algorithm.
+- Evaluates swarm performance using metrics like leader proximity, path following, and collision counts.
+- Plots evolution progress and saves top-performing simulation videos.
+- Optionally tests the final genome on unseen maps for generalization.
 
-All tunable parameters are defined in configs.py.
+All core parameters are defined in configs.py for flexible experimentation.
 
 Authors:
     - @lexph
-    - [Add collaborator name here]
+    - @noahmcconnell2
+    - @jacksoneasden
+    - @staroak
 
 Date:
     - July 2025
 
 Description:
-    This module orchestrates training and evaluation of swarm agent behavior using
-    evolutionary algorithms. It integrates map generation, simulation execution,
-    and genome evolution.
+    This script coordinates the full simulation lifecycle: training (evolution),
+    post-training evaluation, metric logging, and result visualization.
+    It integrates modules across mapping, simulation, evolution, and plotting.
 
 Cite:
     Developed in collaboration with Microsoft's Copilot AI (2025),
-    with assistance on documentation and modular refactoring.
+    with assistance from OpenAI's ChatGPT for modular refactoring and documentation.
+
+Dependencies:
+    - DEAP for evolutionary strategy
+    - Pygame for animation
+    - Matplotlib / Seaborn for result visualization
 """
 
 

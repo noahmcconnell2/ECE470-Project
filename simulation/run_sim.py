@@ -1,3 +1,17 @@
+"""
+Simulation runner for swarm behavior evolution.
+
+This module runs a swarm simulation with a leader-following model and local decision-making
+for follower agents. Each agent evaluates movement options using heuristics encoded in a genome.
+The simulation supports optional visualization and outputs fitness and behavior statistics.
+
+Main behaviors:
+- A leader agent moves along a predefined A* path.
+- Follower agents use local perception and heuristic scoring to choose moves.
+- Movement decisions are evaluated using a fitness function.
+- Optional visualization with interactive or recorded output.
+"""
+
 import numpy as np
 from map.map_structures import MapConfig
 from agent.agent import Agent, AgentRole
@@ -11,12 +25,17 @@ from configs import NUM_AGENTS, ENTRANCE_SIZE, POST_GOAL_BUFFER_STEPS, FOLLOWER_
 
 def run_simulation(genome, map_config: MapConfig, visualize: bool= True, tile_size: int = TILE_SIZE, video_path: Path = None) -> float:
     """
-    Runs a simulation for a given genome on a specified map configuration.
-    Args: 
-        genome: The genome to simulate.
-        map_config: The map configuration containing the grid, leader path, and obstacle distance map.
+    Simulates the behavior of a swarm following a leader using a given genome.
+    
+    Args:
+        genome (list[float]): A list of weights representing behavioral heuristics.
+        map_config (MapConfig): The grid, obstacle, and path configuration for the simulation.
+        visualize (bool): If True, runs a Pygame visualization during simulation.
+        tile_size (int): Size of each tile in the visual output.
+        video_path (Path): Optional path to save the video of the simulation.
+
     Returns:
-        float: The fitness score of the genome after the simulation.
+        Tuple[float, dict]: Fitness score and a summary of simulation metrics and agent paths.
     """
 
     # List of all agents
@@ -76,7 +95,7 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= True, tile_si
 
             ranked_moves = rank_moves_by_score(map_config, agent, leader)
             for score, next_move in ranked_moves:
-                if next_move == agent.position or (map_config.grid.get(next_move) == TileType.EMPTY and next_move not in map_config.agent_index):
+                if (map_config.grid.get(next_move) == TileType.EMPTY and next_move not in map_config.agent_index): # next_move == agent.position or 
                     old_position = agent.position
                     agent.move(next_move)
                     agent.path.append(agent.position)

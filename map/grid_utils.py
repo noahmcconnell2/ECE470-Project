@@ -1,9 +1,30 @@
+"""
+grid_utils.py
+
+Provides utility structures and enums for grid-based simulations.
+
+Includes:
+- `TileType`: Enum for identifying cell types (EMPTY, OBSTACLE, AGENT).
+- `GridWrapper`: Wrapper class around a NumPy array that provides intuitive (x, y) access,
+  boundary checking, and neighborhood queries for use in swarm and pathfinding simulations.
+
+Designed for use in simulations involving agent movement on a 2D grid.
+"""
+
 from dataclasses import dataclass
 import numpy as np
 from typing import Tuple
 import enum
 
 class TileType(enum.IntEnum):
+    """
+    Enum representing different types of tiles in the grid.
+
+    Attributes:
+        EMPTY: A free tile that can be traversed.
+        OBSTACLE: A tile occupied by an obstacle.
+        AGENT: A tile currently occupied by an agent.
+    """
     EMPTY = 0
     OBSTACLE = 1
     AGENT = 2
@@ -11,8 +32,10 @@ class TileType(enum.IntEnum):
 @dataclass
 class GridWrapper:
     """
-    A wrapper for a numpy array to represent a grid.
-    Allows for (x, y) access to numpy array (y, x) coordinates.
+    A wrapper around a 2D NumPy array representing a grid.
+
+    This class provides (x, y) based access to the underlying (row, col) NumPy structure,
+    and includes helper methods for checking bounds and getting Moore neighborhoods.
 
        x →
     y  +--------------------→
@@ -24,33 +47,69 @@ class GridWrapper:
     grid: np.ndarray
 
     def raw(self) -> np.ndarray:
-        """Return the raw numpy array."""
+        """Returns the raw NumPy array representing the grid."""
         return self.grid
 
     def get(self, pos: Tuple[int, int]):
-        """Get the value at (x, y) position."""
+        """
+        Returns the value at position (x, y).
+
+        Args:
+            pos: A tuple (x, y) representing grid coordinates.
+
+        Raises:
+            IndexError: If the position is out of bounds.
+        """
         if not self.in_bounds(pos):
             raise IndexError(f"Position {pos} is out of bounds for grid shape {self.grid.shape}.") 
         x, y = pos
         return self.grid[y, x]  # NumPy uses [row, col] = [y, x]
 
     def set(self, pos: Tuple[int, int], value):
-        """Set the value at (x, y) position."""
+        """
+        Sets the value at position (x, y).
+
+        Args:
+            pos: A tuple (x, y) position in the grid.
+            value: The value to assign to that position.
+        """
         x, y = pos
         self.grid[y, x] = value
 
     def shape(self):
-        """Return the shape of the grid as (width, height)"""
+        """
+        Returns the shape of the grid as (width, height),
+        converting from NumPy's (rows, cols) to (x, y) logic.
+
+        Returns:
+            Tuple[int, int]: (width, height)
+        """
         h, w = self.grid.shape
         return (w, h)
 
     def in_bounds(self, pos: Tuple[int, int]) -> bool:
-        """Check if (x, y) position is inside the grid bounds."""
+        """
+        Checks if the given (x, y) position is within the grid bounds.
+
+        Args:
+            pos: A tuple (x, y) position.
+
+        Returns:
+            bool: True if in bounds, False otherwise.
+        """
         x, y = pos
         return 0 <= y < self.grid.shape[0] and 0 <= x < self.grid.shape[1]
     
     def get_neighborhood(self, pos: Tuple[int, int]) -> list[Tuple[int, int]]:
-        """Get the Moore neighborhood of (x, y) position - includes current position."""
+        """
+        Returns the Moore neighborhood (8 surrounding + center) of a given (x, y) position.
+
+        Args:
+            pos: A tuple (x, y) position.
+
+        Returns:
+            list[Tuple[int, int]]: List of valid neighbor coordinates within bounds.
+        """
         x, y = pos
         neighborhood = []
         for dy in [-1, 0, 1]:

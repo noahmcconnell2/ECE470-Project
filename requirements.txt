@@ -1,0 +1,6 @@
+numpy
+pygame
+imageio
+deap
+matplotlib
+seaborn  # optional

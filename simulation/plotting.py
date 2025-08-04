@@ -10,7 +10,12 @@ This module contains reusable functions for visualizing:
 All plots optionally save to a timestamped log directory for organized analysis.
 
 Author:
-    @lexph (with assistance from OpenAI's ChatGPT, July 2025)
+    @lexph (structure and base implementations guided by OpenAI's ChatGPT, July 2025)
+
+Notes:
+    The plotting structure was generated with the assistance of OpenAI's ChatGPT based on user-defined requirements 
+    (e.g., convergence bands, gene variance boxplots, metric correlations). Code was reviewed, adapted, and integrated 
+    into the swarm evolution project.
 """
 
 import matplotlib.pyplot as plt

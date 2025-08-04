@@ -58,7 +58,10 @@ class GeneIndex(IntEnum):
 
 def rank_moves_by_score(map_config, agent, leader) -> List[Tuple[float, Tuple[int, int]]]:
     """
-    Return a sorted list of candidate moves from best to worst based on total score.
+    Return a sorted list of candidate moves from best to worst based on the weighted sum
+    of six behavioral scores: cohesion, separation, obstacle avoidance, path following,
+    leader distance, and alignment. Penalties are applied for stagnation, oscillation,
+    and isolation.
     """
     possible_moves = get_all_moves(agent.position, map_config.grid)
     entrance_positions = set(map_config.get_entrance_positions())
@@ -180,7 +183,7 @@ def calculate_separation(next_move: Tuple[int, int], nearest_agent: Agent) -> fl
     Returns:
         float: Normalized separation score (0 = distant, 1 = extremely close).
 
-    1 / normalized_distance
+    1 - [log(1+d) / log(2)]
     """
     if not nearest_agent:
         return 1.0  # Full penalty when isolated 

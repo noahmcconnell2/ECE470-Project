@@ -1,4 +1,16 @@
-# Simulation Visualization Module
+"""
+Swarm Simulation Visualization Module
+
+Provides a real-time Pygame-based UI for visualizing swarm behavior evolution. 
+Supports rendering agents, obstacles, leader paths, entrance zones, and agent movement.
+
+Key Features:
+- Adjustable tile size with zoom support (+ / - keys)
+- Agent color-coding by role (leader, follower)
+- Optional video recording using `imageio`
+- Interactive controls for quitting or restarting the simulation
+"""
+
 import pygame
 import numpy as np
 from map.map_structures import MapConfig
@@ -21,7 +33,25 @@ COLOURS = {
 
 
 class SwarmVisualizer:
+    """
+    Pygame-based visualizer for swarm agent simulation.
+
+    Attributes:
+        map_config (MapConfig): The simulation map and agent configuration.
+        tile_size (int): Pixel size of each grid tile.
+        record (bool): Whether to record frames into a video.
+        recorder (ImageioVideoWriter): Recorder instance if video saving is enabled.
+    """
     def __init__(self, map_config: MapConfig, tile_size, record: bool = False, save_path: Path = None):
+        """
+        Initializes the Pygame visualizer for the simulation.
+
+        Args:
+            map_config (MapConfig): Map data with grid and agents.
+            tile_size (int): Size of each tile in pixels.
+            record (bool): Whether to enable video recording.
+            save_path (Path): Where to save the video file if recording.
+        """
         pygame.init()
 
         self.map_config = map_config
@@ -40,16 +70,19 @@ class SwarmVisualizer:
         self.recorder = ImageioVideoWriter(str(save_path), fps=7) if self.record else None
 
     def draw_overlay(self):
+        """Draws control instructions overlayed at the bottom of the screen."""
         instructions = "R = Restart   |   Q = Quit   |   + / - = Zoom"
         text_surface = self.font.render(instructions, True, (50, 50, 50))
         self.screen.blit(text_surface, (10, self.window_height - 25))
 
     def draw_tile(self, x: int, y: int, colour: tuple):
+        """Draws a filled tile at the given grid position with the given color."""
         pixel_x = x * self.tile_size
         pixel_y = y * self.tile_size
         pygame.draw.rect(self.screen, colour, (pixel_x, pixel_y, self.tile_size, self.tile_size))
 
     def draw_border(self, x: int, y: int, colour: tuple, border_thickness=2):
+        """Draws a border around a tile at (x, y) to highlight entrances."""
         pixel_x = x * self.tile_size
         pixel_y = y * self.tile_size
         pygame.draw.rect(
@@ -59,6 +92,7 @@ class SwarmVisualizer:
         )
 
     def draw_grid(self):
+        """Renders the entire simulation grid including tiles, agents, and overlays."""
         self.screen.fill(COLOURS['empty'])
 
         for x in range(self.grid_width):
@@ -90,6 +124,15 @@ class SwarmVisualizer:
             self.recorder.capture(self.screen)
 
     def run_frame(self, fps=7) -> bool:
+        """
+        Processes a single frame of the simulation and handles events.
+
+        Args:
+            fps (int): Frames per second cap for rendering.
+
+        Returns:
+            str: "quit", "restart", or "continue" depending on user input.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit"
@@ -110,6 +153,7 @@ class SwarmVisualizer:
         return True
 
     def close(self):
+        """Closes the simulation window and stops any video recording."""
         if self.recorder:
             self.recorder.close()
         pygame.display.quit()
@@ -118,11 +162,12 @@ class SwarmVisualizer:
 
 def visualize_simulation(map_config: MapConfig, delay_ms: int = 100, tile_size=20):
     """
-    Create and run a simple visualization of the current map state.
-    
+    Launches an interactive visualization window for the provided map config.
+
     Args:
-        map_config: The current map configuration to visualize
-        delay_ms: Milliseconds to wait between frames (controls speed)
+        map_config (MapConfig): Grid and agent state to visualize.
+        delay_ms (int): Delay between frames in milliseconds (inverse of FPS).
+        tile_size (int): Size of each grid tile in pixels.
     """
     visualizer = SwarmVisualizer(map_config, tile_size=tile_size)
     

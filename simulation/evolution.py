@@ -1,3 +1,14 @@
+"""
+Genetic Algorithm framework for evolving swarm agent behaviors using DEAP.
+
+This module configures and runs a DEAP-based evolutionary algorithm, 
+simulates agent behavior across maps, and logs performance metrics 
+and population evolution.
+
+DEAP documentation: https://deap.readthedocs.io/en/master/
+"""
+
+
 import random
 import numpy as np
 from simulation.run_sim import run_simulation
@@ -10,6 +21,7 @@ from configs import (GA_POPULATION_SIZE, GA_GENERATIONS, GENOME_RANGE,
                     VISUALIZATION_PLAN, ENABLE_VISUALIZATION) 
 import multiprocessing
 
+
 def run_genetic_algorithm(map_configs: list,
                           generations: int = GA_GENERATIONS,
                           population_size: int = GA_POPULATION_SIZE,
@@ -19,6 +31,22 @@ def run_genetic_algorithm(map_configs: list,
                           random_seed: int = RANDOM_SEED,
                           previous_genomes: List[tuple] = None
                          ) -> object:
+    """
+    Run a genetic algorithm to evolve agent behavior parameters.
+
+    Args:
+        map_configs (list): List of map configurations to simulate.
+        generations (int): Number of generations to run.
+        population_size (int): Number of genomes in each generation.
+        genome_range (tuple): (min, max) range of genome values.
+        num_elites (int): Number of top genomes to carry over.
+        tournament_group_size (int): Size of tournament for selection.
+        random_seed (int): Seed for reproducibility.
+        previous_genomes (List[tuple], optional): Genomes to inject at start.
+
+    Returns:
+        Tuple: (top_genomes, checkpoint_stats, mean_fitnesses, worst_fitnesses, checkpoint_populations)
+    """
 
     random.seed(random_seed)
     np.random.seed(random_seed)
@@ -95,7 +123,7 @@ def run_genetic_algorithm(map_configs: list,
             #     no_improvement_counter = 0
 
             # === HYBRID INJECTION STRATEGY ===
-            # 1. Linearly decaying injection amount over generations
+            # 1. Exponential decaying random genome injections over generations
             scheduled_k = int(K_MAX * (1 - gen / generations)**1.2)
 
             # 2. Stagnation-triggered fallback
@@ -153,6 +181,15 @@ def run_genetic_algorithm(map_configs: list,
 
 
 def log_checkpoint_stats(tag, population, checkpoint_stats, checkpoint_populations):
+    """
+    Log aggregated fitness and genome statistics at a checkpoint generation.
+
+    Args:
+        tag (str): Checkpoint label (e.g., 'start', 'mid', 'end').
+        population (list): List of genomes with attached statistics.
+        checkpoint_stats (dict): Dict for storing aggregate fitness metrics.
+        checkpoint_populations (dict): Dict for storing genome snapshots.
+    """
     for ind in population:
         # Track sim stats
         if hasattr(ind, "stats") and ind.stats:
@@ -168,7 +205,17 @@ def log_checkpoint_stats(tag, population, checkpoint_stats, checkpoint_populatio
 
 
 def initialize_and_evaluate_population(toolbox, population_size, previous_genomes=None):
-    """Initializes a population and evaluates their fitness."""
+    """
+    Initialize a new population and evaluate all genomes.
+
+    Args:
+        toolbox (base.Toolbox): DEAP toolbox with registered functions.
+        population_size (int): Number of individuals to generate.
+        previous_genomes (list, optional): Predefined genomes to insert into the population.
+
+    Returns:
+        list: Initialized and evaluated population.
+    """
     population = toolbox.population(n=population_size)
 
     # Inject previous genomes if provided
@@ -188,6 +235,19 @@ def initialize_and_evaluate_population(toolbox, population_size, previous_genome
 
 
 def make_clamped_gaussian_mutation(mu, sigma, indpb, low, up):
+    """
+    Factory for creating a Gaussian mutation function that clamps mutated values.
+
+    Args:
+        mu (float): Mean of the Gaussian noise.
+        sigma (float): Standard deviation of the Gaussian noise.
+        indpb (float): Probability of mutating each gene.
+        low (float): Minimum allowed gene value.
+        up (float): Maximum allowed gene value.
+
+    Returns:
+        function: Mutation operator compatible with DEAP.
+    """
     def mutate(genome):
         tools.mutGaussian(genome, mu=mu, sigma=sigma, indpb=indpb)
         for i in range(len(genome)):
@@ -197,6 +257,17 @@ def make_clamped_gaussian_mutation(mu, sigma, indpb, low, up):
 
 
 def evaluate_genome(genome, map_configs, visualize=False):
+    """
+    Evaluate a genome by running it on all map configurations.
+
+    Args:
+        genome (list): The genome (set of behavior weights) to evaluate.
+        map_configs (list): List of map configurations for simulation.
+        visualize (bool): Whether to enable visualization during simulation.
+
+    Returns:
+        tuple: (average fitness, summary statistics)
+    """
     
     results = [
         run_simulation(genome, map_config, visualize=visualize)
@@ -214,6 +285,16 @@ def evaluate_genome(genome, map_configs, visualize=False):
 
 
 def create_condensed_summary(avg_fitness, summaries):
+    """
+    Aggregate summary metrics across all follower agents and maps.
+
+    Args:
+        avg_fitness (float): The average fitness across all runs.
+        summaries (list): List of agent-level metrics from each simulation.
+
+    Returns:
+        dict: Aggregated average statistics for each metric.
+    """
     num_maps = len(summaries)
     num_followers_total = 0
 
@@ -250,6 +331,14 @@ def create_condensed_summary(avg_fitness, summaries):
 
 
 def visualize_at_generation(gen, population, map_configs):
+    """
+    Run visualization for selected genomes at a given generation.
+
+    Args:
+        gen (int): Current generation number.
+        population (list): List of evaluated genomes.
+        map_configs (list): List of map configurations to visualize on.
+    """
     if not ENABLE_VISUALIZATION:
         return
 
