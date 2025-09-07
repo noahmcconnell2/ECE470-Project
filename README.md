@@ -41,13 +41,20 @@ This project explores the evolution of decentralized swarm behavior using a Gene
 
 ## Project Structure
 ├── agent/ # Agent class and behavior tracking
+
 ├── map/ # Grid, tile, and map generation logic
+
 ├── simulation/ # Main simulation, GA, fitness, movement
+
 ├── utils/ # Logging, video capture
+
 ├── logs/ # Auto-generated output folder
+
 ├── configs.py # All tunable settings and constants
+
 ├── main.py # Orchestrates training and testing
-├── README.md 
+
+├── README.md
 
 ---
 
@@ -63,7 +70,7 @@ This project explores the evolution of decentralized swarm behavior using a Gene
 
 Install dependencies using:
 ```bash
-pip install -r requirements.txt`
+pip install -r requirements.txt
 ```
 ---
 
