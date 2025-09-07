@@ -36,7 +36,7 @@ MIN_LEADER_PATH_DISTANCE = int(GRID_DIM[0] * 0.5)   # Minimum path length the le
 # ===============================
 # Agent Settings
 # ===============================
-NUM_AGENTS = 30          # Number of follower agents spawned per simulation
+NUM_AGENTS = 20          # Number of follower agents spawned per simulation
 PERCEPTION_RANGE = 5    # Agents can sense other entities within this Chebyshev radius
 
 
@@ -55,8 +55,8 @@ FOLLOWER_STAGGER_INTERVAL = 1  # Interval (in ticks) between spawning successive
 # ===============================
 # Genetic Algorithm Settings
 # ===============================
-GA_POPULATION_SIZE = 80      # Number of genomes in the population per generation
-GA_GENERATIONS = 70          # Total number of generations for evolution
+GA_POPULATION_SIZE = 45      # Number of genomes in the population per generation
+GA_GENERATIONS = 25          # Total number of generations for evolution
 GENOME_RANGE = (0.0, 5.0)    # Allowed gene weight values (inclusive)
 NUM_ELITES = 1               # Number of top genomes preserved without modification in next generation
 TOURNAMENT_GROUP_SIZE = 3    # Size of tournament selection pool
