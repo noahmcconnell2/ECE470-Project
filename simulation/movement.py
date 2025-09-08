@@ -41,15 +41,27 @@ Lower scores are preferred, representing more desirable moves.
 """
 
 import numpy as np
-from agent.agent import Agent
+from agent.agent import Agent, AgentRole
 from typing import List, Tuple
 from map.map_structures import MapConfig
+from enum import IntEnum
 from configs import ISOLATION_PENALTY, MAX_DISTANCE, SEDENTARY_PENALTY
+
+class GeneIndex(IntEnum):
+    COHESION = 0
+    SEPARATION = 1
+    AVOIDANCE = 2
+    PATH_FOLLOWING = 3
+    LEADER_DISTANCE = 4
+    ALIGNMENT = 5
 
 
 def rank_moves_by_score(map_config, agent, leader) -> List[Tuple[float, Tuple[int, int]]]:
     """
-    Return a sorted list of candidate moves from best to worst based on total score.
+    Return a sorted list of candidate moves from best to worst based on the weighted sum
+    of six behavioral scores: cohesion, separation, obstacle avoidance, path following,
+    leader distance, and alignment. Penalties are applied for stagnation, oscillation,
+    and isolation.
     """
     possible_moves = get_all_moves(agent.position, map_config.grid)
     entrance_positions = set(map_config.get_entrance_positions())
@@ -75,7 +87,17 @@ def rank_moves_by_score(map_config, agent, leader) -> List[Tuple[float, Tuple[in
             alignment    * agent.genome[5]
         )
 
-        if move == agent.position:
+        # Check if leader is in perception zone
+        leader_in_view = any(a.role == AgentRole.LEADER for a in nearby_agents)
+
+        if not leader_in_view:
+            total_score += ISOLATION_PENALTY
+
+        if len(agent.path) >= 2 and move == agent.path[-2]:
+            total_score += agent.osc_penalty
+
+        # Remove penalty when within 3x3 grid plus buffer from goal
+        if move == agent.position and np.linalg.norm(np.array(map_config.leader_path[-1]) - np.array(move)) > np.sqrt(2) + 5: 
             total_score += SEDENTARY_PENALTY
 
         if move in entrance_positions:
@@ -161,17 +183,16 @@ def calculate_separation(next_move: Tuple[int, int], nearest_agent: Agent) -> fl
     Returns:
         float: Normalized separation score (0 = distant, 1 = extremely close).
 
-    1 / normalized_distance
+    1 - [log(1+d) / log(2)]
     """
     if not nearest_agent:
         return 1.0  # Full penalty when isolated 
     
     distance = np.sqrt((nearest_agent.position[0] - next_move[0]) ** 2 + (nearest_agent.position[1] - next_move[1]) ** 2)
-    if distance == 0:
-        return 1.0
     normalized_distance = normalize_feature(distance, ISOLATION_PENALTY)
 
-    return 1/ normalized_distance 
+    # Smooth penalty: close = high penalty, far = low penalty
+    return 1 - np.log1p(normalized_distance) / np.log1p(1) 
 
 
 def calculate_obstacle_avoidance(next_move: Tuple[int, int], map_config: MapConfig) -> float:
@@ -218,8 +239,9 @@ def calculate_leader_distance(next_move: Tuple[int, int], leader_position: Tuple
     """
     distance = np.sqrt((leader_position[0] - next_move[0]) ** 2 + (leader_position[1] - next_move[1]) ** 2)
     normalized_distance = normalize_feature(distance, MAX_DISTANCE)
+    penalty = np.exp(normalized_distance) - 1
 
-    return normalized_distance
+    return penalty
 
 def calculate_alignment(position: Tuple[int, int], next_move: Tuple[int, int], nearby_agents: List[Agent]) -> float:
     """

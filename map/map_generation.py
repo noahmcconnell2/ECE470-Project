@@ -1,3 +1,17 @@
+"""
+Map Generation Utilities for Swarm Simulation
+
+This module handles creation of 2D grid environments with randomized obstacle layouts,
+leader path planning, and distance maps for obstacle avoidance and path-following behavior.
+
+Main Responsibilities:
+- Generate GridWrapper-based maps with configurable size and obstacle density
+- Use A* to generate valid leader paths across grid borders
+- Compute Chebyshev distance maps to obstacles and leader path
+
+Used in both training and testing phases of swarm evolution.
+"""
+
 import numpy as np
 from collections import deque
 import heapq
@@ -8,7 +22,15 @@ from map.grid_utils import TileType
 from configs import GRID_DIM, PERCENT_OBSTACLES, MIN_LEADER_PATH_DISTANCE
 
 def generate_n_map_configs(n: int) -> list[MapConfig]:
-    """ Generates a list of n map configurations."""
+    """
+    Generate a list of n random map configurations.
+
+    Args:
+        n: Number of map configurations to generate.
+
+    Returns:
+        List of MapConfig objects.
+    """
     map_configs = []
     for i in range(n):
         map_config = generate_map_config(index=i,)
@@ -20,6 +42,18 @@ def generate_map_config(index: int, grid_dim: tuple[int, int]= GRID_DIM,
                         percent_obstacles: float = PERCENT_OBSTACLES,
                         min_leader_path_distance: int = MIN_LEADER_PATH_DISTANCE
                         ) -> MapConfig:
+    """
+    Generate a single map configuration with leader path and distance maps.
+
+    Args:
+        index: Identifier for the map config.
+        grid_dim: Grid dimensions (width, height).
+        percent_obstacles: Fraction of grid to be filled with obstacles.
+        min_leader_path_distance: Minimum length for the generated leader path.
+
+    Returns:
+        A MapConfig object with initialized state.
+    """
     
     grid = generate_populated_map(grid_dim, percent_obstacles)
 
@@ -37,6 +71,16 @@ def generate_map_config(index: int, grid_dim: tuple[int, int]= GRID_DIM,
 
 
 def get_valid_leader_starts(grid_shape: tuple[int, int], entrance_width: int) -> list[tuple[int, int]]:
+    """
+    Compute valid entrance positions along grid borders for leader paths.
+
+    Args:
+        grid_shape: Shape of the grid as (height, width).
+        entrance_width: Width of the opening required.
+
+    Returns:
+        List of (x, y) coordinates for valid start/end points.
+    """
     h, w = grid_shape
     half = (entrance_width // 2) + 3
     starts = []
@@ -60,9 +104,21 @@ def get_valid_leader_starts(grid_shape: tuple[int, int], entrance_width: int) ->
     return starts
 
 def heuristic(a: tuple[int,int], b: tuple[int,int]) ->int:
+    """Chebyshev distance heuristic for A* pathfinding."""
     return max(abs(a[0]-b[0]), abs(a[1]-b[1]))
 
 def a_star(grid: np.ndarray, start: tuple[int,int], goal: tuple[int,int]) -> list[tuple[int,int]]:
+    """
+    A* search algorithm for finding a path in a grid with obstacles.
+
+    Args:
+        grid: 2D numpy array of tile types.
+        start: Start position (x, y).
+        goal: Goal position (x, y).
+
+    Returns:
+        List of (x, y) coordinates representing the path, or empty list if unreachable.
+    """
     h, w = grid.shape
     open_set = []
     heapq.heappush(open_set, (0 + heuristic(start, goal), 0, start, [start]))
@@ -76,16 +132,27 @@ def a_star(grid: np.ndarray, start: tuple[int,int], goal: tuple[int,int]) -> lis
             continue
         visited.add(current)
 
-        for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1),
-                       (1,-1),(-1, -1), (-1, 1), (1, 1)]:
-            ny, nx = current[0] + dy, current[1] + dx
-            if 0 <= ny < h and 0 <= nx < w and grid[ny][nx] == 0:
-                next_node = (ny, nx)
+        for dx, dy in [(1, 0), (0, 1), (-1, 0), (0, -1), 
+                       (1, 1), (-1, 1), (-1, -1), (1, -1)]:
+            nx, ny = current[0] + dx, current[1] + dy
+            if 0 <= nx < w and 0 <= ny < h and grid[ny][nx] == TileType.EMPTY:
+                next_node = (nx, ny)
                 heapq.heappush(open_set, (g + 1 + heuristic(next_node, goal), g + 1, next_node, path + [next_node]))
 
     return []
 
+
 def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) -> GridWrapper:
+    """
+    Generate a grid with randomly placed obstacles.
+
+    Args:
+        grid_dim: Tuple (width, height).
+        percent_obstacles: Fraction of total tiles to convert to obstacles.
+
+    Returns:
+        GridWrapper containing the grid with obstacles placed.
+    """
     width, height = grid_dim
     total_cells = width * height
     num_obstacles = int(total_cells * percent_obstacles)
@@ -103,7 +170,18 @@ def generate_populated_map(grid_dim: tuple[int, int], percent_obstacles: float) 
 
     return GridWrapper(grid_array)
 
+
 def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int, int]]:
+    """
+    Generate a valid A* leader path between two edges of the grid.
+
+    Args:
+        grid: 2D NumPy grid array.
+        min_distance: Minimum required length of the path.
+
+    Returns:
+        A list of (x, y) coordinates representing the leader's path.
+    """
     entrance_width = 3
     possible_endpoints = get_valid_leader_starts(grid.shape, entrance_width)
 
@@ -135,15 +213,14 @@ def generate_leader_path(grid: np.ndarray, min_distance: int) -> list[tuple[int,
 
 def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
     """
-        Computes a distance map for the obstacles in a grid. Computes the Chebyshev distance from each cell to the nearest obstacle.
-        Args:
-            grid (np.ndarray): 2D numpy array representing the grid, where each cell is either an obstacle or empty.
-        Returns:
-            GridWrapper: A grid wrapper containing the distance map, where each cell holds the Chebyshev distance to the closest obstacle.
+    Compute Chebyshev distance from each cell to the nearest obstacle using BFS.
 
-        Needed Fixes:
-         - add diagonal neighbors to the distance calculation
-        """
+    Args:
+        grid: 2D NumPy array of the environment.
+
+    Returns:
+        GridWrapper containing distances to nearest obstacle for each cell.
+    """
     height, width = grid.shape
     distance_map = np.full((height, width), -1, dtype=int)  # -1 means unvisited
     queue = deque()
@@ -160,8 +237,8 @@ def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
         x, y = queue.popleft()
         current_distance = distance_map[y, x]
 
-        for dx, dy in [(-1,1), (-1, 0), (-1, -1), (1, 0), 
-                       (0, -1), (1, 1), (-1, 1), (0, 1)]: # check the four adjacent neighbors of the current grid cell
+        for dx, dy in [(1, 0), (0, 1), (-1, 0), (0, -1), 
+                       (1, 1), (-1, 1), (-1, -1), (1, -1)]: # check the four adjacent neighbors of the current grid cell
             nx, ny = x + dx, y + dy
             if 0 <= nx < width and 0 <= ny < height:
                 if distance_map[ny, nx] == -1:
@@ -170,15 +247,18 @@ def compute_obstacle_distance_map(grid: np.ndarray) -> GridWrapper:
 
     return GridWrapper(distance_map)
 
+
 def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_shape: tuple[int, int]) -> GridWrapper:
     """
-        Computes a distance map for the leader path in a grid. Computes the Chebyshev distance from each cell to the nearest point on the leader path.
-        Args:
-            leader_path (list[tuple[int, int]]): List of coordinates representing the leader path.
-            grid_shape (tuple[int, int]): Shape of the grid as (width, height).
-        Returns:
-            GridWrapper: A grid wrapper containing the distance map, where each cell holds the Chebyshev distance to the closest point on the leader path.
-        """
+    Compute the distance from each cell to the nearest leader path tile using Chebyshev distance.
+
+    Args:
+        leader_path: List of (x, y) coordinates in the leader path.
+        grid_shape: Tuple of (width, height) of the grid.
+
+    Returns:
+        GridWrapper with distances to the closest point on the leader path.
+    """
     
     # given a leader path and grid shape, build a 2d array where each cell holds Chebyshev distance to the closest point on the leader path
     w, h = grid_shape
@@ -200,4 +280,3 @@ def compute_leader_path_distance_map(leader_path: list[tuple[int, int]], grid_sh
                     distance_map[ny][nx] = distance_map[y][x] + 1
                     queue.append((nx, ny))
     return GridWrapper(distance_map)
-

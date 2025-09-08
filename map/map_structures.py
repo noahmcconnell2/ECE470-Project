@@ -1,3 +1,16 @@
+"""
+map_structures.py
+
+Defines the MapConfig class used to manage the simulation environment, including:
+- Agent tracking and spatial indexing
+- Leader path storage
+- Distance maps for obstacle and path awareness
+- Dynamic agent spawning and removal logic
+
+This module serves as the state container for each simulation instance, coordinating
+grid access, path initialization, and follower agent management.
+"""
+
 from agent.agent import Agent, AgentRole
 from map.grid_utils import GridWrapper, TileType
 from dataclasses import dataclass
@@ -7,9 +20,16 @@ import numpy as np
 
 @dataclass
 class MapConfig:
-    """Configuration for a map used in the simulation.
-    Contains the grid, leader path, obstacle distance map, and agent index.
-    (x, y) coordinates starting from the top-left corner (0, 0); y increasing downwards, x increasing to the right.
+    """
+    Configuration object for a single simulation map instance.
+
+    Attributes:
+        grid (GridWrapper): The 2D grid environment (wrapped for (x,y) access).
+        leader_path (List[Tuple[int, int]]): Precomputed path for the leader agent to follow.
+        obstacle_distance_map (np.ndarray): Distance from each cell to the nearest obstacle.
+        leader_path_distance_map (np.ndarray): Distance from each cell to the leader path.
+        agent_index (Dict[Tuple[int, int], Agent]): Mapping of grid positions to active agents.
+        name (str): Name identifier for the map (for logging/debugging).
     """
     grid: GridWrapper # np.ndarray wrapper for converting (x,y) coordinates to (y,x) for numpy array access
     leader_path: list[tuple[int, int]]
@@ -20,10 +40,11 @@ class MapConfig:
 
     def update(self, old_position: tuple[int, int], agent: Agent):
         """
-        Update the agent's position in the grid and agent index.
+        Updates an agent's position in both the agent index and grid.
+
         Args:
-            position: The new position of the agent.
-            agent: The agent to update.
+            old_position (tuple): Previous position of the agent (can be None if newly added).
+            agent (Agent): The agent to update (uses its current .position attribute).
         """
         if self.agent_index is None:
             self.agent_index = {}
@@ -40,6 +61,15 @@ class MapConfig:
         self.grid.set(new_position, TileType.AGENT)
 
     def add_followers(self, entrance_size: int, followers: list[Agent], genome: list[float], leader: Agent):
+        """
+        Spawns new follower agents at entrance tiles near the leader's start location.
+
+        Args:
+            entrance_size (int): Width of the entrance opening for follower spawn zone.
+            followers (list[Agent]): The current list of follower agents (mutated in place).
+            genome (list[float]): Genome to assign to new follower agents.
+            leader (Agent): The leader agent (used for heading alignment and spawn reference).
+        """
         x, y = self.leader_path[0]  # Start position of the leader
         w, h = self.grid.shape()  # Width and height of the grid
         half = entrance_size // 2
@@ -90,7 +120,10 @@ class MapConfig:
 
     def get_entrance_positions(self) -> list[tuple[int, int]]:
         """
-        Return a static list of entrance coordinates based on the initial leader position and entrance size.
+        Compute the entrance tile positions based on the leader's initial location and entrance size.
+
+        Returns:
+            List[Tuple[int, int]]: List of (x, y) positions that define the entrance region.
         """
         from configs import ENTRANCE_SIZE  # Local import to avoid circular dependency
 
@@ -111,3 +144,14 @@ class MapConfig:
                     entrance.append((x, fy))
 
         return entrance
+    
+
+    def reset_agents(self):
+        """
+        Clears all agents from the grid and agent index, effectively resetting the simulation state.
+        """
+        positions = list(self.agent_index.keys())
+        for pos in positions:
+            if self.grid.get(pos) == TileType.AGENT:
+                self.grid.set(pos, TileType.EMPTY)
+        self.agent_index.clear()

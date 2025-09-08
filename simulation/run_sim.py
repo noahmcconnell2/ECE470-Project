@@ -1,19 +1,41 @@
+"""
+Simulation runner for swarm behavior evolution.
+
+This module runs a swarm simulation with a leader-following model and local decision-making
+for follower agents. Each agent evaluates movement options using heuristics encoded in a genome.
+The simulation supports optional visualization and outputs fitness and behavior statistics.
+
+Main behaviors:
+- A leader agent moves along a predefined A* path.
+- Follower agents use local perception and heuristic scoring to choose moves.
+- Movement decisions are evaluated using a fitness function.
+- Optional visualization with interactive or recorded output.
+"""
+
 import numpy as np
 from map.map_structures import MapConfig
 from agent.agent import Agent, AgentRole
 from map.grid_utils import TileType
 from simulation.movement import rank_moves_by_score
 from simulation.fitness import calculate_fitness
-from configs import NUM_AGENTS, ENTRANCE_SIZE, POST_GOAL_BUFFER_STEPS, FOLLOWER_STAGGER_INTERVAL
+from copy import deepcopy
+from pathlib import Path
+from configs import NUM_AGENTS, ENTRANCE_SIZE, POST_GOAL_BUFFER_STEPS, FOLLOWER_STAGGER_INTERVAL, TILE_SIZE, MAX_OSC_PENALTY
 
-def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> float:
+
+def run_simulation(genome, map_config: MapConfig, visualize: bool= True, tile_size: int = TILE_SIZE, video_path: Path = None) -> float:
     """
-    Runs a simulation for a given genome on a specified map configuration.
-    Args: 
-        genome: The genome to simulate.
-        map_config: The map configuration containing the grid, leader path, and obstacle distance map.
+    Simulates the behavior of a swarm following a leader using a given genome.
+    
+    Args:
+        genome (list[float]): A list of weights representing behavioral heuristics.
+        map_config (MapConfig): The grid, obstacle, and path configuration for the simulation.
+        visualize (bool): If True, runs a Pygame visualization during simulation.
+        tile_size (int): Size of each tile in the visual output.
+        video_path (Path): Optional path to save the video of the simulation.
+
     Returns:
-        float: The fitness score of the genome after the simulation.
+        Tuple[float, dict]: Fitness score and a summary of simulation metrics and agent paths.
     """
 
     # List of all agents
@@ -26,6 +48,11 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
     leader = Agent(AgentRole.LEADER, map_config.leader_path[0], initial_heading, genome=genome)
     map_config.update(old_position=None, agent=leader)  # Update agent_index and grid with the leader's initial position
 
+    # Initiate Visual
+    if visualize:
+        from simulation.visualization import SwarmVisualizer
+        visualizer = SwarmVisualizer(map_config, tile_size=tile_size, record=(video_path is not None), save_path=video_path)
+
     # Loop until leader reaches goal plus a few extra steps
     for count in range(len(map_config.leader_path) + POST_GOAL_BUFFER_STEPS):  # Allow some extra steps to ensure followers can catch up
         # --- Update leader's attributes ---
@@ -35,6 +62,16 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
             leader.move(next_move)  # Move leader to next position
             leader.heading = (next_move[0] - old_position[0], next_move[1] - old_position[1])
             map_config.update(old_position, leader) # update agent_index and grid using the next move and leaders current position
+        else:
+            leader.complete = True
+        
+        if visualize:
+            result = visualizer.run_frame()
+            if result == "quit":
+                break
+            elif result == "restart":
+                map_config.reset_agents()
+                return run_simulation(genome, deepcopy(map_config), visualize=True, tile_size=tile_size)
 
         leader.path.append(leader.position)
         leader.step_count += 1  # Increment step count for leader
@@ -53,10 +90,12 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
             if agent.role == AgentRole.LEADER:
                 # Leader's movement is already handled above
                 continue
+            if agent.complete:
+                continue
 
             ranked_moves = rank_moves_by_score(map_config, agent, leader)
             for score, next_move in ranked_moves:
-                if next_move == agent.position or map_config.grid.get(next_move) == TileType.EMPTY:
+                if (map_config.grid.get(next_move) == TileType.EMPTY and next_move not in map_config.agent_index): # next_move == agent.position or 
                     old_position = agent.position
                     agent.move(next_move)
                     agent.path.append(agent.position)
@@ -67,6 +106,15 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
                     agent.step_count += 1
                     agent.leader_distance_sum += np.linalg.norm(np.array(agent.position) - np.array(leader.position))
                     agent.path_distance_sum += map_config.leader_path_distance_map.get(agent.position)
+
+                    if len(agent.path) >= 2 and agent.position == agent.path[-2]:
+                        agent.osc_penalty = min(agent.osc_penalty + 1, MAX_OSC_PENALTY) 
+                    else:
+                        agent.osc_penalty = max(agent.osc_penalty -1, 0.0)
+
+                    if leader.complete and np.linalg.norm(np.array(agent.position) - np.array(leader.position)) < 1.4:
+                        agent.complete = True
+
                     break
 
                 elif map_config.grid.get(next_move) == TileType.OBSTACLE:
@@ -76,7 +124,15 @@ def run_simulation(genome, map_config: MapConfig, visualize: bool= False) -> flo
                     agent.agent_collision_count += 1
                 
                 # print(f"Leader Position: {leader.position}, Agent Position: {agent.position}, Next Move: {next_move}, Heading: {agent.heading}")
-
+    if visualize:
+        while True:
+            result = visualizer.run_frame()
+            if result == "quit":
+                break
+            elif result == "restart":
+                map_config.reset_agents()
+                return run_simulation(genome, deepcopy(map_config), visualize=True, tile_size=tile_size)
+        visualizer.close()
 
 
     fitness = calculate_fitness(followers)

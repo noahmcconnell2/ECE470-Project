@@ -1,3 +1,12 @@
+"""
+Logging utilities for saving Genetic Algorithm population history.
+
+This module handles logging of genome populations at each generation
+into timestamped JSON files for reproducibility, debugging, and post-analysis.
+
+Note: Not currently being utilized. Removed from evolution module to allow for multiprocessing.
+"""
+
 import json
 import os
 from datetime import datetime
